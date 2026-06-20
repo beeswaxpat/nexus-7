@@ -29,12 +29,33 @@ export function mountTitlebar(container: HTMLElement, ctx: AppContext): void {
     return b;
   };
 
+  const fsBtn = mkBtn('titlebar__btn--fullscreen', '⛶', 'Fullscreen (F11)', () =>
+    ctx.bridge.toggleFullscreen?.()
+  );
+
   const controls = el('div', { class: 'titlebar__controls' },
     mkBtn('titlebar__btn--settings', '⚙', 'Settings', () => openSettings(ctx)),
+    fsBtn,
     mkBtn('titlebar__btn--min', '–', 'Minimize', () => ctx.bridge.minimizeWindow?.()),
     mkBtn('titlebar__btn--max', '□', 'Maximize / Restore', () => ctx.bridge.toggleMaximizeWindow?.()),
     mkBtn('titlebar__btn--close', '✕', 'Close', () => ctx.bridge.closeWindow?.())
   );
 
   container.replaceChildren(brand, controls);
+
+  // Reflect fullscreen state on the button (also catches F11 / OS-driven changes).
+  ctx.bridge.onFullscreenState?.((on) => {
+    fsBtn.classList.toggle('is-active', on);
+    const label = on ? 'Exit fullscreen (F11)' : 'Fullscreen (F11)';
+    fsBtn.title = label;
+    fsBtn.setAttribute('aria-label', label);
+  });
+
+  // F11 toggles true fullscreen from anywhere in the app.
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F11') {
+      e.preventDefault();
+      ctx.bridge.toggleFullscreen?.();
+    }
+  });
 }

@@ -85,6 +85,18 @@ export function registerIpc(win: BrowserWindow): void {
     if (!win.isDestroyed()) win.close();
   });
 
+  // --- true fullscreen (covers the taskbar, unlike maximize) ----------------
+  ipcMain.on(IPC.WINDOW_FULLSCREEN_TOGGLE, () => {
+    if (!win.isDestroyed()) win.setFullScreen(!win.isFullScreen());
+  });
+  // Mirror fullscreen changes (F11 / native / OS-driven) back to the titlebar button.
+  win.on('enter-full-screen', () => {
+    if (!win.isDestroyed()) win.webContents.send(IPC.WINDOW_FULLSCREEN_STATE, true);
+  });
+  win.on('leave-full-screen', () => {
+    if (!win.isDestroyed()) win.webContents.send(IPC.WINDOW_FULLSCREEN_STATE, false);
+  });
+
   // --- encrypted chat transport (MQTT runs here in MAIN; crypto stays in renderer) ---
   const chat = createChatRelay(win);
   ipcMain.removeAllListeners(IPC.CHAT_CONNECT);
