@@ -1,7 +1,7 @@
 {
   "name": "nexus-7",
   "version": "0.1.0",
-  "description": "NEXUS-7: Blade Runner crypto and stock dashboard (Electron + Vite + TypeScript).",
+  "description": "NEXUS-7: cyberpunk crypto and stock dashboard (Electron + Vite + TypeScript).",
   "private": true,
   "author": "beeswaxpat",
   "license": "MIT",
@@ -19,7 +19,7 @@
     "stocks",
     "dashboard",
     "cyberpunk",
-    "blade-runner"
+    "neon-noir"
   ],
   "main": "dist-electron/main/main.js",
   "scripts": {

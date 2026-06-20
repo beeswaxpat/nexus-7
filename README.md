@@ -1,13 +1,13 @@
 # NEXUS-7
 
-> A Blade Runner styled command deck for crypto and stocks. Live markets, encrypted comms, and a holographic sky, running on your desktop.
+> A cyberpunk command deck for crypto and stocks. Live markets, encrypted comms, and a holographic sky, running on your desktop.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-39ff14.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0db9d7.svg)](#quick-start)
 [![Built with Electron](https://img.shields.io/badge/Built%20with-Electron-47848f.svg)](https://www.electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](https://www.typescriptlang.org/)
 
-Off-world prices, retro-future neon, and a wall of public webcams. NEXUS-7 turns live market data into a noir operations center: real-time crypto and stock tickers, a Bitcoin command center, a wireframe holographic globe tracking real satellites, an end-to-end encrypted group chat, free internet radio, and an animated synthwave skyline. Everything runs off public APIs. No accounts, no API keys, no telemetry. Just a window into the night side of the market.
+Around-the-clock prices, retro-future neon, and a wall of public webcams. NEXUS-7 turns live market data into a noir operations center: real-time crypto and stock tickers, a Bitcoin command center, a wireframe holographic globe tracking real satellites, an end-to-end encrypted group chat, free internet radio, and an animated synthwave skyline. Everything runs off public APIs. No accounts, no API keys, no telemetry. Just a window into the night side of the market.
 
 Built with Electron, Vite, and TypeScript. Ships as a single portable Windows executable (no installer).
 
