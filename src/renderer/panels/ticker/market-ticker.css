@@ -1,0 +1,71 @@
+/* Co-located styles for the bottom market ticker. Geometry only + neon skin.
+   The actual scroll keyframes (translateX) are added in the Visual phase; this
+   file just lays the track out as one non-wrapping row so that animation can be
+   a pure transform (never reflows, never touches the grid). */
+
+.ticker__track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
+  /* Visual phase attaches: animation: ticker-scroll <dur> linear infinite;
+     The track holds the coin list twice, so translateX(-50%) loops seamlessly.
+     will-change hints the compositor so the marquee stays at 60fps. */
+  will-change: transform;
+}
+
+/* Pause the marquee when the tab/window is hidden (saves CPU; set by the panel
+   via data-paused). The Visual phase's keyframes respect this too. */
+.ticker__track[data-paused='true'] {
+  animation-play-state: paused;
+}
+
+.ticker__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4ch;
+  padding: 0 1.1rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+  line-height: var(--ticker-h);
+}
+
+/* thin neon divider between coins (CSS only, so the cell text stays clean) */
+.ticker__item + .ticker__item {
+  border-left: 1px solid color-mix(in srgb, var(--border-glow) 70%, transparent);
+}
+
+.ticker__sym {
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.ticker__price {
+  color: var(--text);
+}
+
+.ticker__chg {
+  font-variant-numeric: tabular-nums;
+}
+
+/* sign-driven recolor (set on the item; both duplicate copies match) */
+.ticker__item.is-up .ticker__chg {
+  color: var(--up);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--up) 45%, transparent);
+}
+.ticker__item.is-down .ticker__chg {
+  color: var(--down);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--down) 45%, transparent);
+}
+
+/* empty / pre-data state: faint, non-animated, never collapses the bar height */
+.ticker__empty {
+  padding: 0 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: var(--ticker-h);
+  white-space: nowrap;
+}

@@ -1,0 +1,132 @@
+/* ===========================================================================
+   Layout: the fullscreen 3-column grid (left stack | center command | right
+   tabbed+chat) plus the full-width bottom ticker, and the single contained
+   overlay layer. GEOMETRY ONLY. Reaction states never touch anything here, so
+   the grid never reflows; they only recolor via var(--accent) elsewhere.
+
+   Grid areas (left/center/right/ticker) and the column ids/classes are a
+   contract with index.html and main.ts mount targets. Do not rename.
+   =========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --titlebar-h: 30px;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-label);
+  overflow: hidden;
+  /* crisper neon edges on the dark field */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient page backdrop: a deep radial wash that picks up the reactive accent,
+   plus a faint perspective grid plane so the near-black never reads as flat.
+   All fixed + behind everything; purely decorative, no pointer impact. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--page-tint), transparent 60%),
+    radial-gradient(80% 60% at 12% 8%, color-mix(in srgb, var(--accent-2) 5%, transparent), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%),
+    var(--bg);
+  transition: background 600ms ease;
+}
+
+/* The grid. Columns ~22% | 1fr | 26%; last row is the fixed-height ticker. */
+#app {
+  display: grid;
+  height: calc(100vh - var(--titlebar-h));
+  width: 100vw;
+  gap: var(--gap);
+  padding: var(--gap);
+  /* wider side columns (more room + readability for the asset boxes and news/chat),
+     a smaller center so the wormhole graphic is less dominant. */
+  grid-template-columns: 26% 1fr 28%;
+  grid-template-rows: 1fr var(--ticker-h);
+  grid-template-areas:
+    'left   center right'
+    'ticker ticker ticker';
+  position: relative;
+  z-index: 0;
+}
+
+.col {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* left column: three stacked boxes (friend, owner, chart) */
+.col--left {
+  grid-area: left;
+}
+.col--left .box {
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+/* give the chart a touch more height than the two asset boxes */
+.col--left .box--chart {
+  flex: 1.25 1 0;
+}
+
+/* center column: the Bitcoin command center */
+.col--center {
+  grid-area: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* right column: tabbed news/live (top) + chat (bottom) */
+.col--right {
+  grid-area: right;
+}
+.col--right .panel {
+  min-height: 0;
+  overflow: hidden;
+}
+.col--right .panel--news {
+  flex: 1.15 1 0;
+}
+.col--right .panel--chat {
+  flex: 1 1 0;
+}
+
+/* bottom full-width ticker */
+.ticker {
+  grid-area: ticker;
+  height: var(--ticker-h);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* ===========================================================================
+   The single contained overlay layer. Fixed, full-viewport, NEVER intercepts
+   input, sits above the grid but below modal dialogs (asset-picker uses 1000;
+   this sits just under so a picker is still clickable). Everything reactive
+   (banners, HACKED/LFG) lives here so it can never reflow the
+   grid. Child visuals are styled in effects.css.
+   =========================================================================== */
+.overlay-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 900;
+  overflow: hidden;
+}

@@ -1,0 +1,27 @@
+/* ===========================================================================
+   Typography. Three families drive the whole HUD (CSP allows fonts.googleapis.com
+   for the stylesheet and fonts.gstatic.com for the woff2 payloads):
+
+     Orbitron        -> display / headers / the big BTC glyph (geometric, techy)
+     Chakra Petch    -> labels / body / UI chrome (squared humanist, very HUD)
+     Share Tech Mono -> tabular numbers (so digits never jitter geometry)
+
+   Rajdhani is pulled too as the documented label fallback in --font-label.
+
+   The @import MUST be the first statement in this file (CSS rule). main.ts imports
+   tokens.css before fonts.css, but each file is its own stylesheet, so the @import
+   is still first within fonts.css and is valid. The packaging phase may later swap
+   this for bundled @font-face files for full offline use; the family names match
+   the --font-* tokens either way.
+   =========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Chakra+Petch:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap');
+
+/* Make every number that uses the mono family lock to tabular figures, even if a
+   panel forgets to. Cheap insurance against digit jitter on live updates. */
+.is-mono,
+[class*='__price'],
+[class*='__cap'],
+[class*='__value'],
+[class*='__change'] {
+  font-variant-numeric: tabular-nums;
+}

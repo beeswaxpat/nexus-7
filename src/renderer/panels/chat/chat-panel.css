@@ -1,0 +1,290 @@
+/* Encrypted comms panel. Column layout: header (status light) + scrolling message
+   list + quick-send row + input row. Recolor goes through --accent only; the status
+   dot uses its own semantic colors. Geometry is fixed so reaction states never
+   reflow the panel. */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: var(--text);
+}
+
+/* --- header / status ---------------------------------------------------- */
+.chat__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.chat__title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* room hop button (PUBLIC CHAT <-> PRIVATE CHAT), sits between title and status */
+.chat__room {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  margin-left: 10px;
+  margin-right: auto;
+}
+
+.chat__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat__status-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.chat__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-faint) 60%, transparent);
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+.chat__dot.is-connecting {
+  background: var(--text-dim);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--text-dim) 60%, transparent);
+  animation: chat-pulse 1.2s ease-in-out infinite;
+}
+.chat__dot.is-connected {
+  background: var(--neon-green);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--neon-green) 70%, transparent);
+}
+.chat__dot.is-error {
+  background: var(--neon-red);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--neon-red) 70%, transparent);
+}
+
+@keyframes chat-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* --- message list ------------------------------------------------------- */
+.chat__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.chat__msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  max-width: 92%;
+  align-self: flex-start;
+}
+
+.chat__msg--mine {
+  align-self: flex-end;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev));
+}
+
+.chat__msg--system {
+  align-self: center;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+}
+.chat__msg--system .chat__text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.chat__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.chat__user {
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.chat__msg:not(.chat__msg--mine) .chat__user {
+  color: var(--text-dim);
+}
+.chat__time {
+  color: var(--text-faint);
+}
+
+.chat__text {
+  font-family: var(--font-label);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* --- quick-send row ----------------------------------------------------- */
+.chat__quick {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  row-gap: 6px;
+  flex: 0 0 auto;
+}
+
+.chat__quick-btn {
+  font-size: 15px;
+  line-height: 1;
+  padding: 5px 8px;
+}
+
+/* --- input row ---------------------------------------------------------- */
+.chat__input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.chat__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-label);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  outline: none;
+}
+.chat__input::placeholder {
+  color: var(--text-faint);
+}
+.chat__input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* --- shared button skin (matches live-tv / panel buttons) --------------- */
+.chat__btn {
+  flex: 0 0 auto;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+}
+.chat__btn:hover {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.chat__btn:active {
+  transform: translateY(1px);
+}
+.chat__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* --- inline prompt card (passphrase / username) ------------------------- */
+.chat__prompt {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin: 4px 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius);
+  background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--bg-elev);
+}
+
+.chat__prompt-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.chat__prompt-note {
+  font-family: var(--font-label);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.chat__prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat__prompt-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: var(--bg-box);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  outline: none;
+}
+.chat__prompt-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.chat__prompt-ok {
+  align-self: flex-start;
+}
+
+[hidden] {
+  display: none !important;
+}

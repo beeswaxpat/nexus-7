@@ -1,0 +1,10 @@
+{
+  // Tests live OUTSIDE the app tsconfig's include paths (src/renderer, src/shared)
+  // so `tsc -p tsconfig.json` never compiles them. Editor-only typecheck config for
+  // the test files; not currently wired into an npm script (it just gives editors the
+  // right libs). It reuses the app compilerOptions verbatim (incl. the vite/client
+  // types that provide import.meta.env) and just widens the include to the tests dir.
+  "extends": "./tsconfig.json",
+  "include": ["tests", "src/renderer", "src/shared"],
+  "exclude": []
+}

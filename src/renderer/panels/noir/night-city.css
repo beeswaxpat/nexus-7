@@ -1,0 +1,75 @@
+/* NIGHT CITY panel: header + a canvas stage that fills the rest. The scene itself
+   is painted in night-city.ts; this file only frames it. */
+
+.ncity {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.ncity__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.ncity__title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.ncity__feed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+
+.ncity__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neon-red);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--neon-red) 70%, transparent);
+  animation: ncity-dot 1.6s steps(1) infinite;
+}
+@keyframes ncity-dot {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ncity__dot { animation: none; }
+}
+
+.ncity__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid color-mix(in srgb, var(--border-glow) 50%, transparent);
+  background: #02030a; /* paint instantly, before the first canvas frame */
+}
+
+.ncity__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}

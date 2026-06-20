@@ -1,0 +1,52 @@
+{
+  "name": "nexus-7",
+  "version": "0.1.0",
+  "description": "NEXUS-7: Blade Runner crypto and stock dashboard (Electron + Vite + TypeScript).",
+  "private": true,
+  "author": "beeswaxpat",
+  "license": "MIT",
+  "homepage": "https://github.com/beeswaxpat/nexus-7#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beeswaxpat/nexus-7.git"
+  },
+  "bugs": {
+    "url": "https://github.com/beeswaxpat/nexus-7/issues"
+  },
+  "keywords": [
+    "electron",
+    "crypto",
+    "stocks",
+    "dashboard",
+    "cyberpunk",
+    "blade-runner"
+  ],
+  "main": "dist-electron/main/main.js",
+  "scripts": {
+    "dev:web": "vite",
+    "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"vite\" \"wait-on tcp:5173 && tsc -p tsconfig.main.json && electron .\"",
+    "build": "tsc -p tsconfig.main.json && vite build",
+    "icon": "node scripts/make-icon.mjs",
+    "build:exe": "npm run build && npm run icon && electron-builder --win portable",
+    "selftest": "node scripts/selftest-all.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "lightweight-charts": "^5.0.0",
+    "mqtt": "^5.10.1",
+    "rss-parser": "^3.13.0",
+    "yahoo-finance2": "^2.13.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "happy-dom": "^20.10.6",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3",
+    "vitest": "^4.1.9",
+    "wait-on": "^8.0.1"
+  }
+}

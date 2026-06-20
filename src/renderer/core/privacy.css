@@ -1,0 +1,19 @@
+/* Privacy mode blur for bag values and totals (core/privacy.ts).
+   Blur instead of masking characters: the cell keeps its true width so the
+   layout never jumps, and the soft glow reads as a deliberate holo-redaction
+   rather than missing data. pointer-events off so a blurred value cannot be
+   clicked into an editor (which would reveal the quantity). */
+
+.nx-blur {
+  filter: blur(8px) saturate(0.75);
+  opacity: 0.85;
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-blur {
+    transition: none;
+  }
+}

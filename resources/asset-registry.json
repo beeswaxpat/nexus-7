@@ -1,0 +1,89 @@
+{
+  "generatedAt": "2026-06-11T16:26:16.192Z",
+  "centerCoinKey": "coingecko:bitcoin",
+  "ownerKeys": [
+    "coingecko:plasma",
+    "coingecko:aleo",
+    "coingecko:thena",
+    "yahoo:TSLA"
+  ],
+  "friendKeys": [
+    "coingecko:ethereum",
+    "coingecko:solana",
+    "coingecko:ripple",
+    "coingecko:hyperliquid",
+    "yahoo:MSTR"
+  ],
+  "assets": [
+    {
+      "key": "coingecko:bitcoin",
+      "symbol": "BTC",
+      "name": "Bitcoin",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:plasma",
+      "symbol": "XPL",
+      "name": "Plasma",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:aleo",
+      "symbol": "ALEO",
+      "name": "ALEO",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:thena",
+      "symbol": "THE",
+      "name": "Thena",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "yahoo:TSLA",
+      "symbol": "TSLA",
+      "name": "Tesla, Inc.",
+      "kind": "stock",
+      "source": "yahoo"
+    },
+    {
+      "key": "coingecko:ethereum",
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:solana",
+      "symbol": "SOL",
+      "name": "Solana",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:ripple",
+      "symbol": "XRP",
+      "name": "XRP",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "coingecko:hyperliquid",
+      "symbol": "HYPE",
+      "name": "Hyperliquid",
+      "kind": "crypto",
+      "source": "coingecko"
+    },
+    {
+      "key": "yahoo:MSTR",
+      "symbol": "MSTR",
+      "name": "Strategy Inc",
+      "kind": "stock",
+      "source": "yahoo"
+    }
+  ]
+}

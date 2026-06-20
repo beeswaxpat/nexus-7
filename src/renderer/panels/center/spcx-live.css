@@ -1,0 +1,109 @@
+/* Live-mode skin for the SPCX (SpaceX) card in btc-stats. Pre-IPO the card shows
+   the countdown spans styled in center.css; once a live Yahoo quote lands the
+   .bstat__spcx--live modifier hides the status/date pair and reveals these spans
+   instead. The shared sym + name spans stay visible in both modes, so they keep
+   driving the row height and the swap never changes the card's geometry. All
+   colors ride the shared tokens so reactive recolor works untouched. */
+
+/* hidden until the card flips live */
+.bstat__spcx .spcx-live__price,
+.bstat__spcx .spcx-live__change,
+.bstat__spcx .spcx-live__tag,
+.bstat__spcx .spcx-live__ah {
+  display: none;
+}
+
+.bstat__spcx--live .bstat__spcx-status,
+.bstat__spcx--live .bstat__spcx-date {
+  display: none;
+}
+
+.bstat__spcx--live .spcx-live__price,
+.bstat__spcx--live .spcx-live__change,
+.bstat__spcx--live .spcx-live__tag {
+  display: inline-block;
+}
+
+/* The after-hours line only renders when the quote actually carries an extended
+   price (the --on modifier). Even live, a regular-session-only quote keeps it
+   hidden. It is smaller than the price span, so showing it never grows the row. */
+.bstat__spcx--live .spcx-live__ah.spcx-live__ah--on {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* tradeable now: solid border instead of the pre-IPO dashed placeholder */
+.bstat__spcx--live {
+  border-style: solid;
+}
+
+/* price + change push right, mirroring the countdown's status/date pair.
+   Share Tech Mono ships weight 400 only: emphasis via size, never bold. */
+.spcx-live__price {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.spcx-live__change {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.spcx-live__change.up {
+  color: var(--up);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--up) 40%, transparent);
+}
+.spcx-live__change.down {
+  color: var(--down);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--down) 40%, transparent);
+}
+
+.spcx-live__tag {
+  font-family: var(--font-label);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon-amber);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-amber) 45%, transparent);
+  white-space: nowrap;
+}
+
+/* After-hours (post/pre market) line: a dimmed crescent moon, then the extended
+   price + percent change in muted gold, smaller than the regular price so the
+   card geometry holds. The change reuses the .up/.down color logic via setChange. */
+.spcx-live__ah {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.spcx-live__ah-moon {
+  font-size: 9px;
+  opacity: 0.65;
+}
+.spcx-live__ah-price {
+  color: color-mix(in srgb, var(--neon-amber) 80%, var(--text-dim));
+}
+.spcx-live__ah-change {
+  color: var(--text-dim);
+}
+.spcx-live__ah-change.up {
+  color: var(--up);
+}
+.spcx-live__ah-change.down {
+  color: var(--down);
+}

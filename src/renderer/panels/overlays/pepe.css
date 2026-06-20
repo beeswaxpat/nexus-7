@@ -1,0 +1,35 @@
+/* Pepe overlay thumbnails. Small, cornered, fade + gentle bob. On the contained
+   overlay layer (pointer-events:none), so they never block clicks or reflow. */
+
+.nx-pepe-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nx-pepe {
+  position: absolute;
+  width: var(--pepe-size, 110px);
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 8px 22px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(10px) scale(0.94) rotate(-2deg);
+  transition: opacity 380ms ease, transform 380ms ease;
+}
+.nx-pepe.is-in {
+  opacity: 0.96;
+  transform: translateY(0) scale(1) rotate(0deg);
+  animation: nx-pepe-bob 3.4s ease-in-out infinite;
+}
+@keyframes nx-pepe-bob {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  50% { transform: translateY(-6px) scale(1.015) rotate(1deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-pepe.is-in { animation: none; }
+}

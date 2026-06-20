@@ -1,0 +1,44 @@
+# electron-builder config: build NEXUS-7 as ONE portable Windows .exe.
+# Portable target = a single self-extracting exe (no installer, no admin): the
+# friend double-clicks it and it runs. requestedExecutionLevel: asInvoker keeps it
+# out of UAC (runs as the current user). Icon is build/icon.ico (a valid 256x256
+# PNG-in-ICO authored by scripts/make-icon.mjs); if that file is ever missing,
+# electron-builder falls back to the default Electron icon and the build succeeds.
+appId: com.nexus7.dashboard
+productName: NEXUS-7
+copyright: NEXUS-7
+
+directories:
+  output: dist
+  buildResources: build
+
+# Only the compiled output ships inside app.asar. Source and node dev deps are
+# excluded. Runtime deps (mqtt, yahoo-finance2, rss-parser, lightweight-charts)
+# are pulled in automatically by their imports.
+files:
+  - dist-electron/**
+  - dist-renderer/**
+  - resources/**
+  - assets/**
+
+# Compress the app payload so the single exe stays small.
+compression: maximum
+# 2-person internal tool: no code signing, so skip the (slow, network) attempt to
+# fetch signing tooling and verify nothing.
+forceCodeSigning: false
+
+win:
+  target:
+    - portable
+  icon: build/icon.ico
+  # asInvoker == run as the current user, no UAC elevation prompt.
+  requestedExecutionLevel: asInvoker
+  # No publisher cert: this name shows in the SmartScreen "More info" panel.
+  artifactName: NEXUS-7-${version}.exe
+
+portable:
+  # The self-extracting exe unpacks to a temp dir and launches; settings persist
+  # in %APPDATA%\NEXUS-7 regardless, so runs share state.
+  artifactName: NEXUS-7-${version}.exe
+  requestExecutionLevel: user
+  unicode: true

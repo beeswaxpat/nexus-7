@@ -1,0 +1,255 @@
+/* CNBC Live tab. Square-ish, responsive: the frame fills the available width and
+   keeps a video aspect that never overflows its host. All recolor goes through
+   --accent so reaction states never change geometry. */
+
+.live-tv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: var(--text);
+}
+
+/* The media area: grows to take leftover space, stays square-ish via aspect-ratio
+   while being clamped so it can never push the controls off-panel. */
+.live-tv__frame,
+.live-tv__fallback {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  max-height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* The iframe mounts into this inner element (NOT the frame itself), so the bezel
+   header + CRT overlay are never replaced when the stream (re)loads. */
+.live-tv__inner {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.live-tv__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* --- shipboard receiver bezel ------------------------------------------- */
+/* Header strip: channel id + status LED. Decorative only: pointer-events:none
+   is CRITICAL so it never intercepts clicks meant for the YouTube controls. */
+.live-tv__bezel-hd {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.35) 60%, transparent 100%);
+}
+.live-tv__hd-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-tv__led {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 70%, transparent);
+  animation: live-tv-led-blink 1.8s steps(1) infinite;
+}
+
+@keyframes live-tv-led-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0.25; }
+}
+
+/* CRT glass overlay: glare streak + scanlines + vignette. Decorative only:
+   pointer-events:none is CRITICAL so the YouTube player stays clickable. */
+.live-tv__crt {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.9;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 38%),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.22) 0,
+      rgba(0, 0, 0, 0.22) 1px,
+      transparent 1px,
+      transparent var(--scanline-size, 3px)),
+    radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.45) 100%);
+  box-shadow: inset 0 0 30px 6px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-tv__led {
+    animation: none;
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* --- offline fallback --------------------------------------------------- */
+.live-tv__fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 12px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 65%),
+    #05060a;
+}
+
+.live-tv__fallback-icon {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.26em;
+  color: var(--accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.live-tv__fallback-msg {
+  font-family: var(--font-label);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.live-tv__fallback-sub {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.live-tv__fallback-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  cursor: pointer;
+}
+.live-tv__fallback-link:hover {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* --- controls ----------------------------------------------------------- */
+.live-tv__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.live-tv__source-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+}
+.live-tv__source-input::placeholder {
+  color: var(--text-faint);
+}
+.live-tv__source-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.live-tv__btn {
+  flex: 0 0 auto;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+}
+.live-tv__btn:hover {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.live-tv__btn:active {
+  transform: translateY(1px);
+}
+.live-tv__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* unmute reads as "live/on" once clicked */
+.live-tv__unmute.is-active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- one-click source presets (Yahoo / Bloomberg / CNBC) ----------------- */
+.live-tv__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.live-tv__preset {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-elev));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.live-tv__preset:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
+}
+.live-tv__preset:active {
+  transform: translateY(1px);
+}

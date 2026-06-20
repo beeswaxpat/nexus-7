@@ -1,0 +1,115 @@
+/* Scene manager chrome: persistent slot wrappers, hover controls, hidden state.
+   Pure overlay styling; the graphics underneath never reflow because of this. */
+
+.scn-slot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.scn-stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+}
+
+/* hover control cluster, top-right; quiet until the slot is hovered */
+.scn-ctl {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+.scn-slot:hover .scn-ctl,
+.scn-ctl:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scn-btn {
+  appearance: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg, #05060a) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.scn-btn:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* the ULTRA pill */
+.scn-btn--ultra {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+.scn-btn--on {
+  color: var(--neon-violet, #b86bff);
+  border-color: color-mix(in srgb, var(--neon-violet, #b86bff) 65%, var(--border));
+  background: color-mix(in srgb, var(--neon-violet, #b86bff) 14%, transparent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-violet, #b86bff) 60%, transparent);
+}
+.scn-btn--on:hover {
+  color: var(--neon-violet, #b86bff);
+}
+
+/* hidden scene: a slim quiet strip with a restore button */
+.scn-slot--off {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scn-hidden-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.scn-show {
+  appearance: none;
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--text-faint);
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.scn-show:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+/* space reclaim in the default arrangement: collapse the center graphic row so
+   the stat cluster + COMMS grow, and shrink the corner panel so news grows */
+.cc.cc--scene-hidden {
+  grid-template-rows: 34px auto auto auto minmax(190px, 1.6fr);
+}
+.col--right .panel.panel--scene-hidden {
+  flex: 0 0 34px;
+}
