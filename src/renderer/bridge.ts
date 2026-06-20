@@ -34,6 +34,11 @@ export interface Bridge {
   minimizeWindow(): void;
   toggleMaximizeWindow(): void;
   closeWindow(): void;
+  // True fullscreen (covers the taskbar). The toggle is always present (the dev:web
+  // mock uses the browser Fullscreen API); the state push is optional (only the
+  // Electron preload emits it).
+  toggleFullscreen(): void;
+  onFullscreenState?(cb: (isFullscreen: boolean) => void): Unsubscribe;
   // Optional chat transport: present in the Electron preload bridge (MQTT runs in
   // main), absent in the dev:web browser-mock (where mqtt-client falls back to the
   // vendored window.mqtt directly, which works fine in a normal browser).
@@ -491,6 +496,15 @@ function createBrowserMock(): Bridge {
     minimizeWindow: () => {},
     toggleMaximizeWindow: () => {},
     closeWindow: () => {},
+    // in a plain browser, use the standard Fullscreen API so the toggle still works
+    toggleFullscreen: () => {
+      try {
+        if (document.fullscreenElement) void document.exitFullscreen();
+        else void document.documentElement.requestFullscreen();
+      } catch {
+        /* ignore */
+      }
+    },
     onCrypto: (cb) => sub(subs.crypto, cb),
     onStocks: (cb) => sub(subs.stocks, cb),
     onFng: (cb) => sub(subs.fng, cb),

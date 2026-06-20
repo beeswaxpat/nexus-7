@@ -17,6 +17,8 @@ export const IPC = {
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_MAXIMIZE_TOGGLE: 'window:maximize-toggle',
   WINDOW_CLOSE: 'window:close',
+  WINDOW_FULLSCREEN_TOGGLE: 'window:fullscreen-toggle', // renderer -> main: toggle true fullscreen (covers the taskbar)
+  WINDOW_FULLSCREEN_STATE: 'window:fullscreen-state', // main -> renderer: (boolean) current fullscreen state
 
   // encrypted chat transport (runs in MAIN: the renderer's network is blocked on
   // non-443 ports on some locked-down networks; the main process reaches the public

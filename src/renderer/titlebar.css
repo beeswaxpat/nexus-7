@@ -111,3 +111,7 @@
   background: #e81123;
   color: #fff;
 }
+/* lit accent while the app is in true fullscreen */
+.titlebar__btn--fullscreen.is-active {
+  color: var(--accent);
+}
