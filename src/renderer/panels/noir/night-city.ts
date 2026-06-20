@@ -1,5 +1,5 @@
 // NIGHT CITY: the ambient noir panel (bottom-right by default). A pure-canvas
-// Blade Runner nightscape: layered parallax skyline with lit windows, flickering
+// cyberpunk nightscape: layered parallax skyline with lit windows, flickering
 // neon signage, three depths of wind-blown rain, drifting fog, blinking rooftop
 // beacons, passing spinners (flying cars), a sweeping searchlight, neon storm
 // lightning (real bolts + cloud crawlers; rare when green, raging on a dump),

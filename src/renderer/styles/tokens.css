@@ -1,5 +1,5 @@
 /* ===========================================================================
-   NEXUS-7 design tokens. The whole Blade Runner palette + the single reactive
+   NEXUS-7 design tokens. The whole cyberpunk palette + the single reactive
    --accent variable that recolors the entire UI with ZERO layout change.
 
    The reactive system: overlay-root.ts sets document.documentElement.dataset.btc
