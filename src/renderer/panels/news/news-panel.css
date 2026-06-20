@@ -1,0 +1,144 @@
+/* Co-located styles for the tabbed right panel (News | CNBC Live). Uses the
+   shared design tokens; reaction states recolor via --accent only, never geometry. */
+
+.news-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* tab strip */
+.tabs {
+  display: flex;
+  flex-wrap: wrap; /* graceful fallback on very narrow panels */
+  gap: 2px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--gap);
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  /* six tabs now share the strip; tight enough to hold one line */
+  padding: 6px 5px;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab--active {
+  color: var(--accent);
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* tab bodies fill the remaining space */
+.news-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.news-panel__news {
+  overflow-y: auto;
+}
+
+.news-panel__live {
+  display: flex;
+  min-height: 0;
+}
+
+/* news list */
+.news-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.news-item {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.news-item:last-child {
+  border-bottom: none;
+}
+
+.news-item__link {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
+  transition: color 120ms ease, text-shadow 120ms ease;
+}
+
+.news-item__link:hover:not(:disabled) {
+  color: var(--accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.news-item__link:disabled {
+  cursor: default;
+  color: var(--text-dim);
+}
+
+/* already-read headline: a per-tab neon, like a classic visited link in this
+   skin. Crypto reads violet, US Economy reads gold. */
+.news-item__link--visited {
+  --visited: var(--neon-violet);
+  color: var(--visited);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--visited) 35%, transparent);
+}
+.news-item__link--econ.news-item__link--visited {
+  --visited: var(--neon-gold);
+}
+
+.news-item__link--visited:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--visited) 75%, white);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--visited) 55%, transparent);
+}
+
+.news-item__meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.news-item__source {
+  color: var(--text-dim);
+}
+
+.news-panel__empty {
+  padding: 16px 4px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  color: var(--text-faint);
+}

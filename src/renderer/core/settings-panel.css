@@ -1,0 +1,251 @@
+/* Co-located styles for the SETTINGS modal (core/settings-panel.ts). Imported by
+   the panel module (Vite handles the CSS import, same as titlebar.css). Scoped
+   under .nx-set-* so it never leaks into other panels, reads the shared design
+   tokens, and sits above everything (the titlebar is z-index 2000). No
+   em-dashes in any visible copy. */
+
+.nx-set-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg, #05060a) 74%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.nx-set-card {
+  width: min(520px, 100%);
+  max-height: min(82vh, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-elev, #0b0e16);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 45%, var(--border, #1b2233));
+  border-radius: var(--radius, 10px);
+  padding: 16px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent, #22e3ff) 20%, transparent),
+    0 18px 60px rgba(0, 0, 0, 0.65),
+    0 0 40px color-mix(in srgb, var(--accent, #22e3ff) 18%, transparent);
+  color: var(--text, #d7e2f3);
+  font-family: var(--font-label, system-ui, sans-serif);
+}
+
+.nx-set-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+}
+.nx-set-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, #22e3ff);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent, #22e3ff) 55%, transparent);
+}
+.nx-set-close {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--border, #1b2233);
+  border-radius: 6px;
+  color: var(--text-dim, #8593ad);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.nx-set-close:hover {
+  color: var(--accent, #22e3ff);
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 55%, var(--border, #1b2233));
+  background: color-mix(in srgb, var(--accent, #22e3ff) 8%, transparent);
+}
+
+/* scrollable body so a tall image grid never blows past the viewport */
+.nx-set-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.nx-set-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nx-set-section-label {
+  font-family: var(--font-display, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint, #4d5876);
+  border-bottom: 1px solid var(--border, #1b2233);
+  padding-bottom: 6px;
+}
+
+/* one-line hint under the section label */
+.nx-set-hint {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--text-dim, #8593ad);
+}
+
+/* add-images button */
+.nx-set-add {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--font-label, sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--accent, #22e3ff) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 55%, var(--border, #1b2233));
+  color: var(--accent, #22e3ff);
+  transition: background 0.12s, opacity 0.12s;
+}
+.nx-set-add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent, #22e3ff) 26%, transparent);
+}
+.nx-set-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.nx-set-note {
+  min-height: 14px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--text-dim, #8593ad);
+}
+.nx-set-note[data-kind='warn'] {
+  color: var(--neon-amber, #ffb02e);
+}
+.nx-set-note[data-kind='busy'] {
+  color: var(--accent, #22e3ff);
+}
+
+/* thumbnail grid */
+.nx-set-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  gap: 8px;
+}
+.nx-set-grid:empty {
+  display: none;
+}
+.nx-set-thumb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 30%, var(--border, #1b2233));
+  background: var(--bg-box, #0a0d15);
+}
+.nx-set-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.nx-set-thumb__rm {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--neon-red, #ff4d4d) 60%, transparent);
+  background: color-mix(in srgb, var(--bg, #05060a) 70%, transparent);
+  color: var(--neon-red, #ff4d4d);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.nx-set-thumb__rm:hover {
+  background: var(--neon-red, #ff4d4d);
+  color: #fff;
+}
+
+.nx-set-empty {
+  font-size: 11px;
+  color: var(--text-faint, #4d5876);
+  padding: 4px 2px;
+}
+
+/* about / maintainer credit card */
+.nx-set-about {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--accent, #22e3ff) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 30%, var(--border, #1b2233));
+  color: var(--text, #d7e2f3);
+  font: inherit;
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+.nx-set-about:hover {
+  background: color-mix(in srgb, var(--accent, #22e3ff) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 60%, var(--border, #1b2233));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent, #22e3ff) 22%, transparent);
+}
+.nx-set-about:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 70%, transparent);
+  outline-offset: 2px;
+}
+.nx-set-about__img {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-box, #0a0d15);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 55%, var(--border, #1b2233));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent, #22e3ff) 28%, transparent);
+}
+.nx-set-about__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.nx-set-about__name {
+  font-family: var(--font-display, sans-serif);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--accent, #22e3ff);
+}
+.nx-set-about__sub {
+  font-size: 11px;
+  color: var(--text-dim, #8593ad);
+  line-height: 1.35;
+}
+.nx-set-about__link {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-dim, #8593ad);
+}
+.nx-set-about:hover .nx-set-about__link {
+  color: var(--accent, #22e3ff);
+}

@@ -1,0 +1,55 @@
+{
+  "friendAssets": [
+    "yahoo:SPCX",
+    "yahoo:TSLA",
+    "yahoo:NVDA",
+    "yahoo:AAPL",
+    "yahoo:INTC"
+  ],
+  "ownerAssets": [
+    "coingecko:bitcoin",
+    "coingecko:ethereum",
+    "coingecko:solana",
+    "coingecko:ripple",
+    "coingecko:hyperliquid"
+  ],
+  "username": "",
+  "btcTargetPrice": 250000,
+  "activeRightTab": "news",
+  "chaos": {
+    "wormhole": true,
+    "banners": true,
+    "scanlines": true,
+    "autoMessage": false
+  },
+  "boxTitles": {
+    "friend": "STONKS",
+    "owner": "CRYPTO"
+  },
+  "centerAsset": "coingecko:bitcoin",
+  "holdings": {
+    "yahoo:SPCX": 1,
+    "yahoo:TSLA": 1,
+    "yahoo:NVDA": 1,
+    "yahoo:AAPL": 1,
+    "yahoo:INTC": 1,
+    "coingecko:bitcoin": 0.01,
+    "coingecko:ethereum": 1,
+    "coingecko:solana": 1,
+    "coingecko:ripple": 1,
+    "coingecko:hyperliquid": 1
+  },
+  "bugNutLabel": "TOTAL",
+  "scenes": {
+    "swapped": true,
+    "showWormhole": true,
+    "showNightCity": true,
+    "ultra": false,
+    "ultraCity": false
+  },
+  "privateMode": false,
+  "images": {
+    "useDefaults": true,
+    "custom": []
+  }
+}

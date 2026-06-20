@@ -1,0 +1,113 @@
+/* Frameless window titlebar. Fixed height (--titlebar-h, set in layout.css). The
+   bar is a drag region; the control cluster opts out so the buttons stay clickable. */
+
+.titlebar {
+  height: var(--titlebar-h, 30px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 9%, var(--bg)), var(--bg));
+  border-bottom: 1px solid var(--edge-faint);
+  -webkit-app-region: drag;
+  user-select: none;
+  position: relative;
+  z-index: 2000;
+}
+
+.titlebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.titlebar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 9px var(--accent);
+}
+.titlebar__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+/* Animated neon/lava wordmark. Sits where the old sub text was (same size band),
+   so the bar height is unaffected. A hot multi-stop gradient is clipped to the
+   glyphs and scrolled for a flowing-lava look; a separate keyframe pulses the
+   neon glow. Both freeze under prefers-reduced-motion. Hyphen, never an em-dash. */
+.titlebar__fable {
+  font-family: var(--font-label);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  /* Flowing hot gradient clipped to the text. 300% wide so the scroll has room. */
+  background-image: linear-gradient(
+    90deg,
+    #ff2d2d 0%,
+    #ff7a18 25%,
+    #ffd24a 50%,
+    #ff7a18 75%,
+    #ff2d2d 100%
+  );
+  background-size: 300% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* Pulsing neon glow via drop-shadow (works with the clipped-text fill). */
+  animation: titlebar-fable-flow 6s ease-in-out infinite,
+             titlebar-fable-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes titlebar-fable-flow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes titlebar-fable-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 122, 24, 0.55)); }
+  50%      { filter: drop-shadow(0 0 7px rgba(255, 210, 74, 0.85)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titlebar__fable {
+    /* Freeze: static gradient frame + static glow, no movement. */
+    animation: none;
+    background-position: 50% 50%;
+    filter: drop-shadow(0 0 4px rgba(255, 122, 24, 0.7));
+  }
+}
+
+.titlebar__controls {
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+.titlebar__btn {
+  width: 46px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+.titlebar__btn:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+.titlebar__btn--close:hover {
+  background: #e81123;
+  color: #fff;
+}

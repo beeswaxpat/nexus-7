@@ -1,0 +1,104 @@
+/* ===========================================================================
+   NEXUS-7 design tokens. The whole Blade Runner palette + the single reactive
+   --accent variable that recolors the entire UI with ZERO layout change.
+
+   The reactive system: overlay-root.ts sets document.documentElement.dataset.btc
+   to normal | pump | dump | lfg (from the BTC 24h change). The selectors at the
+   bottom swap --accent (and a few accent-derived glow vars) per state, so every
+   panel that paints with var(--accent) recolors at once. No geometry token ever
+   changes between states, so nothing reflows.
+
+   NOTE: these custom-property NAMES are a contract. Every panel's co-located CSS
+   (asset-box, center, news, ticker, live-tv, asset-picker, chart) reads them.
+   Do not rename; only add.
+   =========================================================================== */
+:root {
+  /* --- base surfaces (deep near-black, faint blue cast) ------------------- */
+  --bg: #04050a;
+  --bg-elev: #0a0d16;
+  --bg-box: #080b13;
+  --bg-sink: #03040799; /* translucent well used behind insets */
+  --border: #1b2233;
+  --border-glow: #243049;
+
+  /* --- text ------------------------------------------------------------- */
+  --text: #d7e2f3;
+  --text-dim: #8593ad;
+  --text-faint: #4d5876;
+
+  /* --- neon palette (the three signature accents + status colors) -------- */
+  --neon-cyan: #22e3ff;
+  --neon-magenta: #ff3df0;
+  --neon-amber: #ffb02e;
+  --neon-green: #37f5a0;
+  --neon-red: #ff4d4d;
+  --neon-gold: #ffcc33;
+  --neon-violet: #9d6bff;
+
+  /* legacy alias kept for any panel that referenced --neon-green's old hue */
+  --neon-green-soft: #37d67a;
+
+  /* --- semantic up/down (used by rows + ticker) -------------------------- */
+  --up: var(--neon-green);
+  --down: var(--neon-red);
+
+  /* --- THE reactive accent (swapped by [data-btc]) ----------------------- */
+  --accent: var(--neon-cyan);
+  /* a secondary accent for two-tone glows / chromatic split; tracks the theme */
+  --accent-2: var(--neon-magenta);
+
+  /* accent-derived glow helpers (recolor with --accent automatically) ----- */
+  --glow-soft: color-mix(in srgb, var(--accent) 35%, transparent);
+  --glow-mid: color-mix(in srgb, var(--accent) 55%, transparent);
+  --glow-hot: color-mix(in srgb, var(--accent) 75%, transparent);
+  --edge-faint: color-mix(in srgb, var(--accent) 14%, transparent);
+  --edge-mid: color-mix(in srgb, var(--accent) 30%, var(--border));
+
+  /* --- layout knobs (GEOMETRY: never changed by a reaction state) -------- */
+  --gap: 10px;
+  --pad: 12px;
+  --radius: 10px;
+  --ticker-h: 40px;
+  --header-h: 26px;
+
+  /* --- effect intensities (CRT chrome; tuned, not reactive) -------------- */
+  --scanline-opacity: 0.05;
+  --scanline-size: 3px;
+  --vignette-strength: 0.55;
+  --aberration: 0.6px; /* chromatic split distance on headers */
+  --grain-opacity: 0.035;
+
+  /* --- typography (families bound to the @font-face/@import in fonts.css) - */
+  --font-display: 'Orbitron', 'Chakra Petch', system-ui, sans-serif;
+  --font-label: 'Chakra Petch', 'Rajdhani', system-ui, sans-serif;
+  --font-mono: 'Share Tech Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* ambient page tint behind the grid (recolors very subtly with --accent) */
+  --page-tint: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* ===========================================================================
+   Reactive accent swaps. Pure recolor: only color-valued vars change, so the
+   layout is byte-for-byte identical across states (the core layout fix).
+   pump = green, dump = red, lfg = gold (neon takeover). normal = cyan default.
+   =========================================================================== */
+:root[data-btc='pump'] {
+  --accent: var(--neon-green);
+  --accent-2: var(--neon-gold);
+}
+:root[data-btc='dump'] {
+  --accent: var(--neon-red);
+  --accent-2: var(--neon-magenta);
+}
+:root[data-btc='lfg'] {
+  --accent: var(--neon-gold);
+  --accent-2: var(--neon-amber);
+}
+
+/* honor reduced-motion: callers also check it, but kill the heavy ambient
+   animations at the source so the chrome stays calm. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --scanline-opacity: 0.03;
+  }
+}

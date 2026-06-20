@@ -1,0 +1,409 @@
+/* Jukebox tab: a synthwave radio deck. Spinning disc + ON AIR lamp in the header,
+   a 16-bar equalizer, circular transport, neon volume rail, numbered station cards,
+   and a perspective horizon grid glowing along the bottom. Everything themes via
+   --accent so the reactive pump/dump states recolor the whole deck too. */
+
+.jukebox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  padding: 6px 4px 4px;
+  color: var(--text);
+  isolation: isolate;
+}
+
+/* synthwave horizon: a perspective floor grid fading up from the panel bottom */
+.jukebox::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 46%;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(
+      to top,
+      color-mix(in srgb, var(--accent) 22%, transparent) 0 1px,
+      transparent 1px 14px
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--accent) 16%, transparent) 0 1px,
+      transparent 1px 26px
+    ),
+    linear-gradient(to top, color-mix(in srgb, var(--accent) 10%, transparent), transparent);
+  transform: perspective(220px) rotateX(48deg) scale(1.4);
+  transform-origin: bottom center;
+  opacity: 0.16;
+  -webkit-mask-image: linear-gradient(to top, #000 30%, transparent);
+  mask-image: linear-gradient(to top, #000 30%, transparent);
+}
+.jukebox.is-playing::before {
+  opacity: 0.3;
+}
+
+/* a soft sun-glow on the horizon line behind the grid */
+.jukebox::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 38%;
+  width: 60%;
+  height: 26%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -2;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    color-mix(in srgb, var(--accent-2) 18%, transparent),
+    transparent 70%
+  );
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------------------ the deck */
+.jukebox__deck {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg-elev) 80%, transparent);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* the disc: concentric grooves + accent rim; spins while playing */
+.jukebox__disc {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      #0a0e18 0 2px,
+      #131a2b 2px 4px
+    );
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--accent) 30%, transparent),
+    inset 0 0 8px rgba(0, 0, 0, 0.8);
+  display: grid;
+  place-items: center;
+}
+/* a light sweep across the grooves so the spin is visible */
+.jukebox__disc::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 40deg,
+    color-mix(in srgb, var(--accent) 22%, transparent) 60deg,
+    transparent 80deg 200deg,
+    color-mix(in srgb, var(--accent-2) 14%, transparent) 220deg,
+    transparent 240deg
+  );
+}
+.jukebox__disc-hub {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--glow-mid);
+}
+.jukebox.is-playing .jukebox__disc {
+  animation: jukebox-spin 2.4s linear infinite;
+}
+@keyframes jukebox-spin {
+  to { transform: rotate(360deg); }
+}
+
+.jukebox__now-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.jukebox__now-ch {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--text-faint);
+}
+.jukebox__now-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jukebox__now-genre {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ON AIR lamp: dark until .is-playing lights + blinks it */
+.jukebox__onair {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--neon-red) 40%, var(--border));
+  color: color-mix(in srgb, var(--neon-red) 45%, var(--text-faint));
+  background: transparent;
+  transition: color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+.jukebox.is-playing .jukebox__onair {
+  color: #fff;
+  background: color-mix(in srgb, var(--neon-red) 30%, transparent);
+  border-color: var(--neon-red);
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--neon-red) 60%, transparent),
+    inset 0 0 8px color-mix(in srgb, var(--neon-red) 40%, transparent);
+  text-shadow: 0 0 8px var(--neon-red);
+  animation: jukebox-onair 1.4s steps(1) infinite;
+}
+@keyframes jukebox-onair {
+  0%, 70% { opacity: 1; }
+  71%, 100% { opacity: 0.55; }
+}
+
+/* ------------------------------------------------------------- the equalizer */
+.jukebox__eq {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 6px;
+  flex: 0 0 auto;
+}
+.jukebox__eq-bar {
+  flex: 1 1 0;
+  max-width: 14px;
+  height: 12%;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--accent) 80%, transparent),
+    color-mix(in srgb, var(--accent-2) 80%, transparent)
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent);
+  opacity: 0.35;
+  transition: opacity 300ms ease;
+}
+.jukebox.is-playing .jukebox__eq-bar {
+  opacity: 1;
+  animation-name: jukebox-eq;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  /* per-bar delay/duration set inline by jukebox.ts so the bars de-sync */
+}
+@keyframes jukebox-eq {
+  0%, 100% { height: 14%; }
+  35% { height: 92%; }
+  60% { height: 38%; }
+  80% { height: 70%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jukebox.is-playing .jukebox__eq-bar { animation: none; height: 40%; }
+  .jukebox.is-playing .jukebox__disc { animation-duration: 8s; }
+}
+
+/* ---------------------------------------------------------------- transport */
+.jukebox__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+.jukebox__play {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    var(--bg-elev);
+  color: var(--accent);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: box-shadow 150ms ease, border-color 150ms ease, transform 80ms ease;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.jukebox__play:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--glow-mid);
+}
+.jukebox__play:active {
+  transform: scale(0.94);
+}
+.jukebox.is-playing .jukebox__play {
+  animation: jukebox-play-pulse 2.2s ease-in-out infinite;
+}
+@keyframes jukebox-play-pulse {
+  0%, 100% { box-shadow: 0 0 10px var(--glow-soft); }
+  50% { box-shadow: 0 0 20px var(--glow-mid); }
+}
+.jukebox__play-glyph {
+  font-size: 14px;
+  line-height: 1;
+  text-shadow: 0 0 8px var(--glow-mid);
+}
+
+/* the volume rail: custom neon track + glowing thumb */
+.jukebox__vol {
+  flex: 1 1 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    color-mix(in srgb, var(--accent-2) 45%, transparent)
+  );
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent);
+  outline-offset: 4px;
+  cursor: pointer;
+}
+.jukebox__vol::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid color-mix(in srgb, #fff 35%, var(--accent));
+  box-shadow: 0 0 10px var(--glow-mid);
+  transition: transform 100ms ease;
+}
+.jukebox__vol::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.jukebox__vol-val {
+  flex: 0 0 auto;
+  min-width: 5.2ch; /* VOL 100 never shifts the row */
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+/* ------------------------------------------------------------- station list */
+.jukebox__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 0;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+.jukebox__station {
+  position: relative;
+  /* never compress rows when the panel is short (e.g. the corner graphic is
+     visible); the list scrolls instead */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-elev) 55%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+/* hover shine sweep */
+.jukebox__station::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+.jukebox__station:hover::after {
+  transition: transform 500ms ease;
+  transform: translateX(110%);
+}
+.jukebox__station:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+/* the active card: accent edge bar + inset glow */
+.jukebox__station.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    inset 0 0 16px color-mix(in srgb, var(--accent) 12%, transparent),
+    0 0 10px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.jukebox__station-idx {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+.jukebox__station.is-active .jukebox__station-idx {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--glow-mid);
+}
+.jukebox__station-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-label);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jukebox__station-genre {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.jukebox__station.is-active .jukebox__station-genre {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}

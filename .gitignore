@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-electron/
+dist-renderer/
+build/
+release/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor cruft
+.vscode/
+.idea/
+
+# Personal / private first-run seeds: these hold real holdings and personal box
+# titles and must NEVER be published. The neutral public demo seed
+# (resources/seed-settings.example.json) is tracked on purpose.
+resources/seed-settings.json
+resources/seed-settings.buddy.json
+scripts/seed-og.json
+# Belt-and-suspenders: a seed accidentally written to the repo root would hold
+# real holdings, so never let one be committed.
+/seed-settings.json
+
+# Local-only meme originals and dev proof screenshots (not used at runtime)
+pepe/
+.proof/
+.claude/

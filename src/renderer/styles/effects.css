@@ -1,0 +1,285 @@
+/* ===========================================================================
+   CRT / neon effects + the reactive overlay visuals.
+
+   Three fixed full-screen pointer-events:none layers paint the cyberpunk CRT
+   feel without ever touching layout:
+     1. scanlines   (body[data-scanlines='on']::after)  -> horizontal CRT lines
+     2. vignette    (body::after)                        -> dark corners + curve
+     3. (grain rides on the vignette layer via a second background)
+
+   Plus:
+     - subtle chromatic aberration on display headers (text-shadow split)
+     - the ticker marquee translateX keyframes for .ticker__track
+     - every overlay-layer visual: blinking BTC banner, HACKED/LFG center text.
+
+   overlay-root.ts toggles body[data-scanlines] from settings.chaos.scanlines,
+   and sets the overlay state attributes this file styles. Nothing here changes
+   geometry on a reaction state: only color/opacity/transform.
+   =========================================================================== */
+
+/* --------------------------------------------------------------- 1. scanlines */
+/* One fixed overlay, enabled by <body data-scanlines="on"> (set by mountOverlays
+   from chaos.scanlines). Above the grid + overlay visuals, below modal dialogs. */
+body[data-scanlines='on']::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1500;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0,
+    rgba(0, 0, 0, 0) calc(var(--scanline-size) - 1px),
+    rgba(0, 0, 0, var(--scanline-opacity)) var(--scanline-size)
+  );
+  mix-blend-mode: multiply;
+  /* a very slow vertical drift so the lines feel like a live tube */
+  animation: nx-scanline-drift 8s linear infinite;
+}
+@keyframes nx-scanline-drift {
+  from { background-position-y: 0; }
+  to { background-position-y: var(--scanline-size); }
+}
+
+/* ----------------------------------------------------- 2. vignette + grain */
+/* Always on (it is the "tube" curvature). A radial darkening of the corners plus
+   a faint repeating grain. Fixed, never interactive, sits above content but below
+   scanlines and overlay text so headlines stay readable. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 850;
+  background:
+    radial-gradient(
+      130% 130% at 50% 50%,
+      transparent 56%,
+      rgba(0, 0, 0, calc(var(--vignette-strength) * 0.6)) 82%,
+      rgba(0, 0, 0, var(--vignette-strength)) 100%
+    );
+}
+
+/* film grain as its own fixed layer (separate so its blend mode is independent).
+   A tiny SVG-noise data URI tiled; cheap and resolution-independent. */
+body::before {
+  /* NOTE: body::before in layout.css paints the ambient backdrop at z-index -2.
+     Grain needs a different stacking element, so it is attached to #app::before
+     instead (below). This selector intentionally left for documentation only. */
+}
+
+#app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 840;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: overlay;
+}
+
+/* --------------------------------------------- 3. chromatic aberration: headers */
+/* Cheap RGB split on the big display headers (Orbitron). A magenta + cyan
+   text-shadow offset gives the "misconverged CRT" look. Uses fixed offsets
+   (var(--aberration)); --accent still drives the main glow so it stays on-theme.
+   Applies to the panel/box display titles + the command-center stat headline. */
+.asset-box__title,
+.panel-stub__title,
+.ap-title,
+.bstat__price,
+.ncity__title,
+.jukebox__now-name,
+.live-tv__fallback-icon {
+  text-shadow:
+    calc(-1 * var(--aberration)) 0 0 color-mix(in srgb, var(--neon-magenta) 70%, transparent),
+    var(--aberration) 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent),
+    0 0 12px var(--glow-mid);
+}
+
+/* a slow flicker on the section titles, like an unstable sign */
+.asset-box__title,
+.ncity__title {
+  animation: nx-title-flicker 6s steps(1) infinite;
+}
+@keyframes nx-title-flicker {
+  0%, 92%, 100% { opacity: 1; }
+  93% { opacity: 0.7; }
+  94% { opacity: 1; }
+  96% { opacity: 0.82; }
+  97% { opacity: 1; }
+}
+
+/* ------------------------------------------------------------- boot power-on */
+/* One-time CRT warm-up on launch: the grid fades in with a slight overshoot of
+   brightness, like a tube coming up to temperature. Opacity/filter only. */
+#app {
+  animation: nx-boot 900ms ease-out;
+}
+@keyframes nx-boot {
+  0% { opacity: 0; filter: brightness(0.4) saturate(0.4); }
+  60% { opacity: 1; filter: brightness(1.25) saturate(1.1); }
+  100% { opacity: 1; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app { animation: none; }
+}
+
+/* ===========================================================================
+   Ticker marquee. The track holds the coin list TWICE, so translateX(-50%)
+   loops seamlessly. Animation lives on .ticker__track (the panel never replaces
+   that element, so updates do not restart the scroll). [data-paused] handled in
+   the co-located market-ticker.css (animation-play-state: paused).
+   =========================================================================== */
+.ticker {
+  position: relative;
+  /* faint top accent rule + side fade masks so coins enter/exit cleanly */
+  border-top: 1px solid var(--edge-faint);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, transparent), transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.ticker__track {
+  /* a touch slower than the original 60s so coins are easier to read */
+  animation: nx-ticker-scroll 75s linear infinite;
+}
+@keyframes nx-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* pause on hover so a value can be read */
+.ticker:hover .ticker__track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track { animation-duration: 120s; }
+}
+
+/* ===========================================================================
+   OVERLAY LAYER VISUALS (rendered into #overlay-root by overlays/*).
+   The host is fixed + pointer-events:none (layout.css). These children paint
+   the reactive chaos. Every one is transform/opacity only.
+   =========================================================================== */
+
+/* --- BTC easter-egg banner: a blinking marquee strip near the top center ----
+   Offset below the custom titlebar (the overlay layer is fixed to the whole window,
+   so top:12px tucked under the 30px titlebar and clipped the banner). */
+.nx-banner {
+  position: absolute;
+  top: calc(var(--titlebar-h) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 70vw;
+  padding: 8px 22px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(13px, 1.5vw, 20px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  text-shadow:
+    calc(-1 * var(--aberration)) 0 0 color-mix(in srgb, var(--neon-magenta) 70%, transparent),
+    var(--aberration) 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent),
+    0 0 14px var(--glow-hot);
+  box-shadow:
+    0 0 18px var(--glow-mid),
+    inset 0 0 14px color-mix(in srgb, var(--accent) 22%, transparent);
+  /* enter, then blink. opacity-only so it never reflows. */
+  animation: nx-banner-in 280ms ease-out, nx-banner-blink 1.1s steps(1) infinite 280ms;
+  will-change: opacity, transform;
+}
+.nx-banner.is-leaving {
+  animation: nx-banner-out 240ms ease-in forwards;
+}
+@keyframes nx-banner-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes nx-banner-out {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -8px); }
+}
+@keyframes nx-banner-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.28; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-banner { animation: nx-banner-in 280ms ease-out; }
+}
+
+/* --- HACKED / LFG center overlay text --------------------------------------- */
+.nx-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.nx-center__text {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 0.95;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+/* shown states (set by hacked.ts via data-center-overlay on the overlay root) */
+.overlay-root[data-center-overlay='hacked'] .nx-center__text--hacked,
+.overlay-root[data-center-overlay='lfg'] .nx-center__text--lfg {
+  opacity: 1;
+  transform: scale(1);
+}
+/* hide the inactive one entirely so only one shows at a time */
+.overlay-root:not([data-center-overlay='hacked']) .nx-center__text--hacked,
+.overlay-root:not([data-center-overlay='lfg']) .nx-center__text--lfg {
+  opacity: 0;
+}
+
+/* HACKED: red glitch slam */
+.nx-center__text--hacked {
+  font-size: clamp(40px, 11vw, 170px);
+  color: var(--neon-red);
+  text-shadow:
+    3px 0 0 color-mix(in srgb, var(--neon-magenta) 80%, transparent),
+    -3px 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent),
+    0 0 28px color-mix(in srgb, var(--neon-red) 80%, transparent);
+}
+.overlay-root[data-center-overlay='hacked'] .nx-center__text--hacked {
+  animation: nx-glitch 1.6s steps(2) infinite;
+}
+@keyframes nx-glitch {
+  0%, 100% { transform: translate(0, 0) scale(1); clip-path: inset(0 0 0 0); }
+  20% { transform: translate(-3px, 1px) scale(1.01); clip-path: inset(12% 0 40% 0); }
+  40% { transform: translate(3px, -1px) scale(1); clip-path: inset(60% 0 8% 0); }
+  60% { transform: translate(-2px, 0) scale(1.005); clip-path: inset(30% 0 30% 0); }
+  80% { transform: translate(2px, 1px) scale(1); clip-path: inset(4% 0 70% 0); }
+}
+
+/* LFG: gold takeover with a pulse */
+.nx-center__text--lfg {
+  font-size: clamp(48px, 13vw, 200px);
+  color: var(--neon-gold);
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--neon-gold) 90%, transparent),
+    0 0 40px color-mix(in srgb, var(--neon-amber) 80%, transparent),
+    0 0 90px color-mix(in srgb, var(--neon-gold) 60%, transparent);
+}
+.overlay-root[data-center-overlay='lfg'] .nx-center__text--lfg {
+  animation: nx-lfg-pulse 1.2s ease-in-out infinite;
+}
+@keyframes nx-lfg-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-center__text--hacked,
+  .nx-center__text--lfg { animation: none !important; }
+}

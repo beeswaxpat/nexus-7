@@ -1,0 +1,42 @@
+/* Resizable left-column dividers. Two .colsplit handles sit between the three
+   stacked boxes (friend / owner / chart). They are flex items in #col-left, so
+   they take a fixed 7px of vertical space and the boxes flex around them. The
+   visible grip is a small centered bar that brightens on hover/focus; the hit
+   area spans the full column width. Geometry-only: dragging changes flex-grow,
+   never the grid. */
+
+.colsplit {
+  flex: 0 0 7px;
+  cursor: row-resize;
+  position: relative;
+  /* full-width hit area; the visible grip is the centered ::before bar */
+  touch-action: none;
+}
+
+/* centered 28px x 2px grip bar, accent at low alpha, brighter on hover/focus */
+.colsplit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  opacity: 1;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+.colsplit:hover::before,
+.colsplit:focus-visible::before {
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 8px var(--glow-mid);
+}
+
+/* keyboard focus ring sits on the bar, not a full-width outline */
+.colsplit:focus {
+  outline: none;
+}
+.colsplit:focus-visible {
+  outline: none;
+}

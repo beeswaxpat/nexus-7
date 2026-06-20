@@ -1,0 +1,270 @@
+/* Co-located styles for the friend asset picker overlay (panels/asset-box/asset-picker.ts).
+   These are injected once at runtime by ensureStyles() (mirrored in PICKER_CSS) so the
+   panel works under both Electron and dev:web without a CSS-import build step. Keep this
+   file in sync with PICKER_CSS in asset-picker.ts. Everything is scoped under .ap-* so it
+   never leaks into other panels, uses the shared design tokens, and is geometry-stable
+   (numbers use the tabular mono so they do not jitter). */
+
+.ap-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg, #05060a) 72%, transparent);
+  backdrop-filter: blur(3px);
+}
+.ap-card {
+  width: min(560px, 100%);
+  max-height: min(80vh, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-elev, #0b0e16);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 45%, var(--border, #1b2233));
+  border-radius: var(--radius, 10px);
+  padding: 16px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #22e3ff) 20%, transparent),
+    0 18px 60px rgba(0, 0, 0, 0.65),
+    0 0 40px color-mix(in srgb, var(--accent, #22e3ff) 18%, transparent);
+  color: var(--text, #d7e2f3);
+  font-family: var(--font-label, system-ui, sans-serif);
+}
+.ap-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ap-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent, #22e3ff);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent, #22e3ff) 55%, transparent);
+}
+.ap-close {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--border, #1b2233);
+  border-radius: 6px;
+  color: var(--text-dim, #8593ad);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.ap-close:hover {
+  color: var(--accent, #22e3ff);
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 55%, var(--border, #1b2233));
+  background: color-mix(in srgb, var(--accent, #22e3ff) 8%, transparent);
+}
+.ap-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--bg-box, #0a0d15);
+  border: 1px solid var(--border, #1b2233);
+  border-radius: 8px;
+  color: var(--text, #d7e2f3);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.ap-input::placeholder {
+  color: var(--text-faint, #4d5876);
+}
+.ap-input:focus {
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 60%, var(--border, #1b2233));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #22e3ff) 40%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent, #22e3ff) 18%, transparent);
+}
+.ap-status {
+  min-height: 14px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim, #8593ad);
+}
+.ap-status[data-kind='error'] {
+  color: var(--neon-red, #ff4d4d);
+}
+.ap-status[data-kind='busy'] {
+  color: var(--accent, #22e3ff);
+}
+.ap-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 240px;
+}
+.ap-results:empty {
+  display: none;
+}
+.ap-result,
+.ap-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-box, #0a0d15);
+  border: 1px solid var(--border, #1b2233);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.ap-result__main,
+.ap-current {
+  min-width: 0;
+}
+.ap-result__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ap-result__sym,
+.ap-current__id {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  color: var(--text, #d7e2f3);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ap-result__name {
+  font-size: 11px;
+  color: var(--text-dim, #8593ad);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ap-result__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.ap-result__src,
+.ap-current__src {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint, #4d5876);
+}
+.ap-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  opacity: 0.85;
+}
+.ap-tag--crypto {
+  color: var(--neon-cyan, #22e3ff);
+}
+.ap-tag--stock {
+  color: var(--neon-gold, #ffcc33);
+}
+.ap-tag--dex {
+  color: var(--neon-violet, #9d6bff);
+}
+/* SPEC5 Part P: disambiguation candidate list. .ap-result--pick rows are selectable,
+   --primary marks the default, --active is the keyboard/click highlight. */
+.ap-result--pick {
+  cursor: pointer;
+}
+.ap-result__symline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ap-result__primary {
+  flex: 0 0 auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--accent, #22e3ff);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 50%, transparent);
+  background: color-mix(in srgb, var(--accent, #22e3ff) 10%, transparent);
+}
+.ap-result--primary {
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 35%, var(--border, #1b2233));
+}
+.ap-result--active {
+  border-color: color-mix(in srgb, var(--accent, #22e3ff) 70%, var(--border, #1b2233));
+  background: color-mix(in srgb, var(--accent, #22e3ff) 10%, var(--bg-box, #0a0d15));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #22e3ff) 30%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent, #22e3ff) 14%, transparent);
+}
+.ap-current {
+  justify-content: space-between;
+}
+.ap-current__id {
+  flex: 1 1 auto;
+}
+.ap-add,
+.ap-remove {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--font-label, sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s, opacity 0.12s;
+}
+.ap-add {
+  background: color-mix(in srgb, var(--accent, #22e3ff) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #22e3ff) 55%, var(--border, #1b2233));
+  color: var(--accent, #22e3ff);
+}
+.ap-add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent, #22e3ff) 26%, transparent);
+}
+.ap-remove {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--neon-red, #ff4d4d) 40%, var(--border, #1b2233));
+  color: var(--neon-red, #ff4d4d);
+}
+.ap-remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--neon-red, #ff4d4d) 16%, transparent);
+}
+.ap-add:disabled,
+.ap-remove:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ap-section-label {
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint, #4d5876);
+}
+.ap-current-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 200px;
+}
+.ap-empty {
+  font-size: 11px;
+  color: var(--text-faint, #4d5876);
+  padding: 6px 2px;
+}

@@ -1,0 +1,54 @@
+/* Drag-and-drop panel rearrange. Each swappable slot gets a hover-reveal grip at
+   its top center (away from titles on the left and controls on the right). Pure
+   overlay chrome: position:relative on the slot, the grip is absolute, so nothing
+   here changes the grid geometry. */
+
+.nx-swap-slot {
+  position: relative;
+}
+
+.nx-grip {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: 32px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-top: 0;
+  border-radius: 0 0 7px 7px;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 140ms ease, box-shadow 140ms ease;
+}
+.nx-swap-slot:hover > .nx-grip,
+body.nx-swapping .nx-grip {
+  opacity: 0.7;
+}
+.nx-grip:hover {
+  opacity: 1;
+  box-shadow: 0 0 10px var(--glow-mid);
+}
+.nx-grip:active {
+  cursor: grabbing;
+}
+
+/* drop-target highlight while a swap drag is in progress */
+.nx-swap-over {
+  outline: 2px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: -2px;
+}
+
+/* during a drag, let drop events pass through media to the slot underneath */
+body.nx-swapping iframe,
+body.nx-swapping canvas {
+  pointer-events: none;
+}

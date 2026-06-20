@@ -1,0 +1,409 @@
+/* Co-located styles for the Bitcoin command center sub-panels (fear-greed,
+   btc-stats, clock). The .cc grid itself lives in components.css; this
+   file only skins the inner content. Core rule (matches the layout fix in the
+   plan): numbers never change geometry. Reactive recolor rides --accent / the
+   per-band inline color; all motion is transform/opacity only. */
+
+/* shared label chrome for the small stat blocks */
+.cc__block-label {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* numbers everywhere in the center use tabular figures so digits never jitter */
+.cc__fng,
+.cc__stats,
+.cc__clock,
+.cc__comms {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ Fear & Greed */
+.fng {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.fng__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fng__title {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.fng__value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--fng-color, var(--text));
+  text-shadow: 0 0 10px color-mix(in srgb, var(--fng-color, var(--accent)) 45%, transparent);
+}
+/* fixed-height track so the fill never changes the row geometry */
+.fng__track {
+  position: relative;
+  height: 8px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.fng__fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: var(--fng-color, var(--accent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--fng-color, var(--accent)) 60%, transparent);
+  transition: transform 0.6s ease, background-color 0.4s ease;
+}
+.fng__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fng__level {
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--fng-color, var(--text));
+}
+.fng__skull {
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  /* off-screen until Extreme Fear flips the modifier; transform-only motion */
+}
+.fng--extreme-fear .fng__skull {
+  opacity: 1;
+  animation: fng-skull 1.1s ease-in-out infinite;
+}
+@keyframes fng-skull {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(6deg);
+  }
+}
+
+/* ------------------------------------------------------------------ BTC stats */
+/* Two cells: the existing featured-asset stats on the LEFT, the combined-
+   portfolio BUG NUT total on the RIGHT. The right column is compact and hugs
+   its content; a hairline left border in the panel's border color divides the
+   two. The left cell keeps its original column flow (.bstat__main) untouched. */
+.bstat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, max-content);
+  gap: 10px;
+  min-width: 0;
+  align-items: start;
+}
+.bstat__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* RIGHT cell: combined-portfolio BUG NUT total */
+.bstat__bugnut {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  max-width: 190px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+  text-align: right;
+  align-items: flex-end;
+}
+.bstat__bn-label {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* click-to-rename affordance, mirroring the asset-box title editor */
+.bstat__bn-label--editable {
+  cursor: text;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 140ms ease, color 140ms ease;
+  outline: none;
+}
+.bstat__bn-label--editable:hover,
+.bstat__bn-label--editable:focus {
+  color: var(--text);
+  border-bottom-color: color-mix(in srgb, var(--text-dim) 45%, transparent);
+}
+.bstat__bn-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--neon-gold);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--neon-gold) 45%, transparent);
+  white-space: nowrap;
+}
+.bstat__bn-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* chips reuse the .bstat__change / .bstat__change7d up/down color rules; this
+   only sets the shared shape so we do not duplicate the color tokens. Scoped
+   under .bstat__bn-row to raise specificity above the later single-class
+   .bstat__change rule (16px + margin-left:auto), which the 24H chip also
+   carries: without the extra class the base rule won by source order. */
+.bstat__bn-row .bstat__bn-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+  /* override .bstat__change's margin-left:auto so both chips group at the right */
+  margin-left: 0;
+}
+.bstat__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+/* the featured-asset callout above the big price; click opens the center picker */
+.bstat__asset-row {
+  display: flex;
+  align-items: center;
+}
+.bstat__asset {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 140ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.bstat__asset:hover {
+  border-bottom-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.bstat__asset::after {
+  content: " \25BE"; /* small down triangle: "this is a chooser" */
+  font-size: 9px;
+  opacity: 0.7;
+}
+.bstat__price {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 50%, transparent);
+  white-space: nowrap;
+}
+.bstat__cap {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.bstat__cap-label {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-right: 4px;
+}
+/* road bar toward the target price */
+.bstat__road {
+  position: relative;
+  height: 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.bstat__road-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    var(--accent)
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: transform 0.6s ease;
+}
+.bstat__road-labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.bstat__road-target {
+  color: var(--neon-gold);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-gold) 45%, transparent);
+}
+
+/* BTC 24h change + animated reaction emoji on the price row (same data as rows) */
+.bstat__row {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+.bstat__emoji {
+  font-size: 17px;
+  line-height: 1;
+}
+.bstat__emoji[data-emoji] {
+  animation: bstat-emoji-bob 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+@keyframes bstat-emoji-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.12); }
+}
+.bstat__change {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  /* weight 400: Share Tech Mono has no bold; synthetic bold makes 8s read as 0s */
+  font-weight: 400;
+  margin-left: auto;
+  color: var(--text-dim);
+}
+.bstat__change.up {
+  color: var(--up);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--up) 40%, transparent);
+}
+.bstat__change.down {
+  color: var(--down);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--down) 40%, transparent);
+}
+
+.bstat__row2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bstat__change7d {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.bstat__change7d.up {
+  color: color-mix(in srgb, var(--up) 80%, var(--text-dim));
+}
+.bstat__change7d.down {
+  color: color-mix(in srgb, var(--down) 80%, var(--text-dim));
+}
+
+/* SPCX (SpaceX) pre-IPO placeholder under Bitcoin. Spans BOTH grid columns as its
+   own full-width row below the price / TOTAL row, so the gold bar reaches the
+   right edge of the center box. */
+.bstat__spcx {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 5px 8px;
+  border: 1px dashed color-mix(in srgb, var(--neon-amber) 45%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--neon-amber) 6%, transparent);
+}
+.bstat__spcx-sym {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--neon-amber);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-amber) 45%, transparent);
+}
+.bstat__spcx-name {
+  font-family: var(--font-label);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.bstat__spcx-status {
+  margin-left: auto;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon-amber);
+}
+.bstat__spcx-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* the gold card is the re-pointable second slot: click affordance, mirroring the
+   .bstat__asset chooser. Geometry unchanged; only border tint + glow + focus ring. */
+.bstat__spcx--pick {
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.bstat__spcx--pick:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.bstat__spcx--pick:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ Clock */
+/* sits directly under the graphic cell now (row 2 of .cc), so it carries more
+   presence: bigger digits + wider tracking. NO bolder weight: Share Tech Mono
+   ships only 400 and synthetic bold smears 8s into 0s. */
+.clock {
+  text-align: center;
+  line-height: 1;
+}
+.clock__time {
+  font-family: var(--font-mono);
+  font-size: 27px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.clock__date {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 4px;
+}

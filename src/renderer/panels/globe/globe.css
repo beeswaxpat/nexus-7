@@ -1,0 +1,186 @@
+/* GLOBE centerpiece. The canvas fills its container; all motion is painted on
+   the canvas so the host box never reflows. Unlike the old wormhole this scene
+   IS interactive: the canvas takes pointer input for drag-to-rotate AND wheel to
+   zoom out through the Moon and the solar system. Reactive recolor rides the CSS
+   custom properties sampled at runtime in globe.ts.
+
+   Round 12 adds a yacht-bridge holotank viewport: a hull bezel, a swept glass
+   pane, and a lower lip strip carrying the live telemetry line. These are
+   pointer-events:none overlay DOM (the canvas keeps the wheel + drag gestures);
+   z-order is canvas < bezel/glass (2) < tag/lip (3). */
+
+.globe {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #02030a; /* paint instantly, before the first canvas frame */
+  /* size container kept from the old wormhole box so any cqmin-based overlay
+     keeps resolving against THIS box. */
+  container-type: size;
+}
+
+.globe__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none; /* pointer-drag rotation owns the gesture */
+}
+
+.globe--dragging .globe__canvas {
+  cursor: grabbing;
+}
+
+/* tiny corner chrome, styled like the night-city feed line */
+.globe__tag {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.globe__tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--glow-mid);
+  animation: globe-tag-dot 1.6s steps(1) infinite;
+}
+
+/* the uplink label is the only interactive bit of the tag (the easter-egg taps) */
+.globe__tag-label {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+@keyframes globe-tag-dot {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.25; }
+}
+
+/* --- B3: yacht viewport chrome (bezel / glass / lip + telemetry) ----------- */
+
+/* Hull bezel: a double inset ring (outer hull edge + inner shadow) plus a soft
+   interior vignette, with two rivets pinned into the top corners. */
+.globe__bezel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(150, 220, 255, 0.18),
+    inset 0 0 0 6px rgba(8, 16, 30, 0.55),
+    inset 0 0 60px 8px rgba(0, 0, 0, 0.55);
+}
+
+.globe__bezel::before,
+.globe__bezel::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(190, 230, 255, 0.5), rgba(20, 34, 52, 0.9) 70%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.globe__bezel::before { left: 9px; }
+.globe__bezel::after { right: 9px; }
+
+/* Glass pane: the diagonal streak was removed because on this tall narrow panel
+   it read as an off-kilter bright quadrilateral over the dark scene. The element
+   stays (the markup still appends it) but draws nothing. */
+.globe__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Lip: an 18px strip across the bottom with a top hairline and an ambient
+   ellipse glow behind the telemetry line. */
+.globe__lip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18px;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-top: 1px solid rgba(150, 220, 255, 0.16);
+  background: linear-gradient(to top, rgba(6, 12, 22, 0.7), rgba(6, 12, 22, 0));
+}
+
+.globe__lip::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 60%;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  filter: blur(2px);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  opacity: 0.5;
+}
+
+.globe__telem {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.globe__telem-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--glow-mid);
+  animation: globe-telem-dot 1.4s steps(1) infinite;
+}
+
+@keyframes globe-telem-dot {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0.2; }
+}
+
+/* Narrow viewports: drop the rivets, shrink the lip. */
+@container (max-width: 220px) {
+  .globe__bezel::before,
+  .globe__bezel::after { display: none; }
+  .globe__lip { height: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .globe__tag-dot { animation: none; }
+  .globe__telem-dot { animation: none; }
+}
