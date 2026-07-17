@@ -57,8 +57,6 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ## Screenshots
 
-Screenshots go here. Add images under `docs/` and link them in this section.
-
 ![NEXUS-7 dashboard](./docs/screenshot.png)
 
 ## Quick Start
