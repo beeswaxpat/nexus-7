@@ -1,13 +1,13 @@
 # NEXUS-7
 
-> A cyberpunk command deck for crypto and stocks. Live markets, encrypted comms, and a holographic sky, running on your desktop.
+> A crypto and stock dashboard for Windows with a cyberpunk look. Live prices, a globe, radio, webcams, and an encrypted chat room.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-39ff14.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0db9d7.svg)](#quick-start)
 [![Built with Electron](https://img.shields.io/badge/Built%20with-Electron-47848f.svg)](https://www.electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](https://www.typescriptlang.org/)
 
-Around-the-clock prices, retro-future neon, and a wall of public webcams. NEXUS-7 turns live market data into a noir operations center: real-time crypto and stock tickers, a Bitcoin command center, a wireframe holographic globe tracking real satellites, an end-to-end encrypted group chat, free internet radio, and an animated synthwave skyline. Everything runs off public APIs. No accounts, no API keys, no telemetry. Just a window into the night side of the market.
+NEXUS-7 is a desktop app for people who keep a market screen open. It shows live crypto and stock prices, a Bitcoin chart, a wireframe globe that tracks real satellites and scrolls out to the edge of the universe, an encrypted group chat, free internet radio, public webcams and TV, and an animated synthwave skyline. It uses public APIs only. No accounts, no API keys, no telemetry.
 
 Built with Electron, Vite, and TypeScript. Ships as a single portable Windows executable (no installer).
 
@@ -30,7 +30,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ### Ambient scenes
 
-- GLOBE: a holographic Earth with dot-matrix continents in real day and night, city lights that switch on as the terminator passes, real satellites and the ISS, and a parallax star field. Scroll to pull back through 8 phases: Earth, cislunar space (Moon, its trail, the Lagrange points), the solar system (planet trails, the asteroid and Kuiper belts, corona), the Milky Way, the Local Group, the observable universe, the multiverse, and the dimensional planes with a 4D tesseract. Stars streak as you travel, a shell pulse marks each boundary, a live SCALE readout counts the field width from kilometers to gigalight-years, and the ladder on the right jumps straight to any phase. Occasional meteors arrive with shockwave impacts.
+- GLOBE: a wireframe Earth with dot-matrix continents in real day and night, city lights that switch on as the terminator passes, real satellites and the ISS, and a parallax star field. Scroll to pull back through 8 phases: Earth, cislunar space (Moon, its trail, the Lagrange points), the solar system (planet trails, the asteroid and Kuiper belts, corona), the Milky Way, the Local Group, the observable universe, the multiverse, and the dimensional planes with a 4D tesseract. Stars streak while you zoom, a ring pulse marks each boundary, a SCALE readout counts the field width from kilometers to gigalight-years, and the ladder on the right jumps to any phase. Meteors hit now and then.
 - NIGHT CITY: a synthwave skyline with a rare alien UFO flyover. ULTRA synthwave mode is on by default; the scene controls or Settings switch it off.
 - Either scene can be swapped or hidden.
 
@@ -53,7 +53,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 - Settings gear in the titlebar: callsign and private-room passphrase reset, the chaos toggles (banners, HACKED / LFG takeover, scanlines, auto message), scene arrangement and Night City ULTRA, layout resets, and your own overlay images (multi-select, auto-downscaled).
 - Five LEDs in the titlebar show the health of each data source (hover for the last update); a red LED means the panels are showing last-known values.
-- Reactive "chaos": price-driven banners, accent recolor on pumps and dumps, and your uploaded images drifting in as overlays, all contained so they never break the layout.
+- "Chaos" effects: price-driven banners, accent recolor on pumps and dumps, and your uploaded images drifting in as overlays. None of it moves the layout.
 - Respects `prefers-reduced-motion`.
 
 ## Screenshots
@@ -87,7 +87,7 @@ npm run build:exe
 
 The portable Windows executable is written to `dist/NEXUS-7-<version>.exe`. It is a single self-extracting exe: double-click to run, with no installer and no admin prompt. Settings persist in `%APPDATA%\NEXUS-7`.
 
-The build is unsigned, so Windows SmartScreen may show a "Windows protected your PC" prompt the first time you run it. Click "More info" and then "Run anyway". This is normal for indie apps that are not code-signed.
+The build is unsigned, so Windows SmartScreen may show a "Windows protected your PC" prompt the first time you run it. Click "More info" and then "Run anyway". That is the standard prompt for any exe without a code-signing certificate.
 
 ## Tests
 
