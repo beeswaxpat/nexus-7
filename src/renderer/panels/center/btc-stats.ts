@@ -21,8 +21,7 @@ import { centerIsBitcoin, findCenterQuote, findQuoteByKey, secondaryKey, seconda
 import { SPCX_IPO } from '../../../shared/constants';
 import { computePortfolio } from '../../core/portfolio';
 import { isPrivate, markPrivate, PRIVACY_EVENT } from '../../core/privacy';
-import { openCenterPicker } from './center-picker';
-import { openSecondaryPicker } from './secondary-picker';
+import { openCenterPicker, openSecondaryPicker } from './slot-picker';
 import './spcx-live.css';
 
 /** Fallback label for the combined-portfolio cell when settings has none. */
