@@ -62,7 +62,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ## Quick Start
 
-Requirements: Node 20 or newer, on Windows.
+Requirements: Node 22 or newer, on Windows.
 
 ```bash
 npm install
@@ -125,9 +125,9 @@ On first launch the app looks for `resources/seed-settings.json`. If that file i
 
 ## Tech stack
 
-- Electron 33
-- Vite 6
-- TypeScript 5 (strict mode)
+- Electron 44
+- Vite 8
+- TypeScript 7 (strict mode)
 - lightweight-charts (candlestick chart)
 - mqtt (encrypted chat over WSS)
 - yahoo-finance2, rss-parser (data adapters)

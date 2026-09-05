@@ -1,6 +1,6 @@
 {
   "name": "nexus-7",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "NEXUS-7: cyberpunk crypto and stock dashboard (Electron + Vite + TypeScript).",
   "private": true,
   "author": "beeswaxpat",
@@ -37,17 +37,17 @@
     "lightweight-charts": "^5.0.0",
     "mqtt": "^5.10.1",
     "rss-parser": "^3.13.0",
-    "yahoo-finance2": "^2.13.3"
+    "yahoo-finance2": "^4.0.2"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
-    "concurrently": "^9.1.0",
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.8",
-    "happy-dom": "^20.10.6",
-    "typescript": "^5.6.3",
-    "vite": "^6.0.3",
-    "vitest": "^4.1.9",
-    "wait-on": "^8.0.1"
+    "@types/node": "^24.13.3",
+    "concurrently": "^10.0.5",
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3",
+    "happy-dom": "^20.14.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0",
+    "wait-on": "^9.1.0"
   }
 }

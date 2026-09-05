@@ -22,7 +22,7 @@ function assert(cond, msg) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const QUIET_LOGGER = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+const QUIET_LOGGER = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {}, dir: () => {} };
 
 // Map a raw yahoo-finance2 quote into the AssetQuote shape, exactly as the adapter does.
 function toQuote(q, requested, asOf) {

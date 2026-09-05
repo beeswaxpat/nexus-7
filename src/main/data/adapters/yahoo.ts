@@ -56,7 +56,9 @@ const QUIET_LOGGER = {
   info: () => {},
   warn: () => {},
   error: () => {},
-  debug: () => {}
+  debug: () => {},
+  // v4 requires dir() too (object dumps in debug mode)
+  dir: () => {}
 };
 
 // Yahoo's consent/crumb endpoint occasionally answers 429 on a cold first call. The
