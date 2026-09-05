@@ -14,7 +14,7 @@
     "coingecko:hyperliquid"
   ],
   "username": "",
-  "activeRightTab": "news",
+  "activeRightTab": "monitor",
   "chaos": {
     "wormhole": true,
     "banners": true,

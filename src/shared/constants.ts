@@ -64,11 +64,13 @@ export const SECONDARY_DEFAULT_KEY = 'yahoo:' + SPCX_IPO.symbol;
 export const DEFAULT_LIVE_TV_URL = 'https://www.youtube.com/embed/KQp-e_XQnDE';
 
 /**
- * Default MONITOR-tab feed: EarthCam's 24/7 Times Square cam (New York). The
+ * Default MONITOR-tab feed: the 24/7 Kabukicho street cam (Shinjuku, Tokyo). The
  * MONITOR tab is a grid of public city/surveillance webcams; this is the first
- * one shown. Embeddable as of 2026-06-15. Overridable via Settings.monitorUrl.
+ * one shown, and MONITOR is the tab a fresh profile opens on (activeRightTab),
+ * so a first launch lands on a live Tokyo street. Embeddable as of 2026-09-05.
+ * Overridable via Settings.monitorUrl.
  */
-export const DEFAULT_MONITOR_URL = 'https://www.youtube.com/embed/z-jYdOIKcTQ';
+export const DEFAULT_MONITOR_URL = 'https://www.youtube.com/embed/DjdUEyjx8GM';
 
 /**
  * Ticker denylist: stablecoins + wrapped tokens (CoinGecko ids). Also drop any id
@@ -204,7 +206,7 @@ export function defaultSettings(): Settings {
     username: '',
     liveTvUrl: DEFAULT_LIVE_TV_URL,
     monitorUrl: DEFAULT_MONITOR_URL,
-    activeRightTab: 'news',
+    activeRightTab: 'monitor',
     chaos: {
       wormhole: true,
       banners: true,

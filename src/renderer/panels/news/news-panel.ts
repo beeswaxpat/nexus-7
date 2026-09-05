@@ -38,14 +38,14 @@ const TABS: TabDef[] = [
 // embed (mountLiveTv -> toEmbedUrl). Each src is either a '/embed/<id>' URL for a
 // fixed video cam or a bare 'UC...' channel id (toEmbedUrl maps those to
 // live_stream?channel=). Labels are uppercase, city middle-dot place (U+00B7), no
-// em-dash. Default (CH-01, Times Square) matches DEFAULT_MONITOR_URL. The ISS feed
+// em-dash. Default (CH-01, Tokyo) matches DEFAULT_MONITOR_URL. The ISS feed
 // is a NASA-style HD Earth-from-space view. Cams re-verified embeddable 2026-06-18.
 const MONITOR_PRESETS: ReadonlyArray<{ label: string; src: string }> = [
+  { label: 'TOKYO · JAPAN', src: 'https://www.youtube.com/embed/DjdUEyjx8GM' },
   { label: 'NEW YORK · USA', src: 'https://www.youtube.com/embed/z-jYdOIKcTQ' },
   { label: 'HONG KONG · CHINA', src: 'UCNcY1o1xGgTX_19w0cXes9g' },
   { label: 'LONDON · UK', src: 'https://www.youtube.com/embed/M3EYAY2MftI' },
   { label: 'ISS · LIVE EARTH', src: 'https://www.youtube.com/embed/fO9e9jnhYK8' },
-  { label: 'TOKYO · JAPAN', src: 'https://www.youtube.com/embed/DjdUEyjx8GM' },
   { label: 'DUBLIN · IRELAND', src: 'https://www.youtube.com/embed/u4UZ4UvZXrg' },
   { label: 'JACKSON HOLE · USA', src: 'https://www.youtube.com/embed/1EiC9bvVGnk' },
   { label: 'NAMIB DESERT · NAMIBIA', src: 'https://www.youtube.com/embed/ydYDqZQpim8' },

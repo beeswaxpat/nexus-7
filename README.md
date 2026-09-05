@@ -39,7 +39,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 - Crypto News and US Economy: live RSS feeds.
 - Jukebox: free 24/7 internet radio (Nightride FM synthwave plus SomaFM stations).
 - TV: a finance live stream.
-- MONITOR: rotating 24/7 public webcams, including the ISS live Earth feed, plus city and nature cams.
+- MONITOR: rotating 24/7 public webcams, including the ISS live Earth feed, plus city and nature cams. A fresh install opens here, on a live Tokyo street.
 
 ### Encrypted group chat (COMMS)
 
