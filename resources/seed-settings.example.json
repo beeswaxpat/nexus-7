@@ -32,7 +32,7 @@
     "swapped": true,
     "showWormhole": true,
     "showNightCity": true,
-    "ultraCity": false
+    "ultraCity": true
   },
   "privateMode": false,
   "images": {

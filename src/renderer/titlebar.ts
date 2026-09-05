@@ -39,7 +39,7 @@ export function mountTitlebar(container: HTMLElement, ctx: AppContext): void {
     el('span', { class: 'titlebar__dot', 'aria-hidden': 'true' }),
     el('span', { class: 'titlebar__name', text: 'NEXUS-7' }),
     // Animated neon/lava wordmark (CSS does the flowing-gradient + glow work).
-    el('span', { class: 'titlebar__fable', text: 'FABLE-POWERED' })
+    el('span', { class: 'titlebar__fable', text: 'FABLE 5.1' })
   );
 
   // --- source-health LEDs ----------------------------------------------------

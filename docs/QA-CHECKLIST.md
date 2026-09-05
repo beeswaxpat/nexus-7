@@ -42,7 +42,7 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 - [ ] Settings gear opens the settings panel with COMMS, CHAOS, SCENES, LAYOUT, MEME IMAGES, and ABOUT sections.
 - [ ] Change the callsign; the chat posts a system line and the next message carries the new name.
-- [ ] Flip CRT scanlines off and on; the lines vanish and return without a restart. Flip Night City ULTRA; the scene remounts in synthwave.
+- [ ] Flip CRT scanlines off and on; the lines vanish and return without a restart. Flip Night City ULTRA (on by default); the scene remounts in normal noir and back.
 - [ ] Reset panel arrangement after a drag-swap; panels return to their original slots.
 - [ ] Add a custom image; it appears in the grid and joins the overlay pool.
 - [ ] Remove a custom image; it is gone from the grid and the pool.

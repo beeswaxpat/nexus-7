@@ -225,7 +225,7 @@ export function defaultSettings(): Settings {
       swapped: true,
       showWormhole: true,
       showNightCity: true,
-      ultraCity: false
+      ultraCity: true
     },
     // matches layout.css: the two asset boxes at 1, the chart a touch taller at 1.25.
     leftFlex: { friend: 1, owner: 1, chart: 1.25 },
