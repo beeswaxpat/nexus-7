@@ -19,6 +19,16 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 - [ ] The ladder on the right highlights the current phase; clicking a rung jumps to it; the wheel still zooms while the pointer is over the ladder.
 - [ ] Cislunar: the Moon shows a glow, LUNA + live range, a motion trail, and L1/L2/L4/L5 markers. Solar: planets sit on their rings after a drag yaw, with motion trails, Saturn's ring, the asteroid belt, and all eight labels.
 - [ ] Zoom back IN returns smoothly to Earth.
+
+## Layout moves
+
+- [ ] Drag the grip (top center of any panel) onto another panel: the two swap, state intact (chart keeps its candles, globe keeps spinning, chat stays connected).
+- [ ] Drop the right-hand tabs panel onto the center column: the tabs fill the center, and the command center fits the top-right slot with COMMS still usable.
+- [ ] Drop the command center into a left-column box: its graphic row collapses and the column scrolls so COMMS stays reachable.
+- [ ] Move the chart anywhere: its title moves with it and the candles resize to the new slot.
+- [ ] Hide the corner scene after a move: whichever slot holds it collapses to the SHOW strip, and the strip follows the scene through further swaps. SHOW restores the slot.
+- [ ] Restart the app: the arrangement is restored. Settings > LAYOUT > reset puts everything back.
+- [ ] Jukebox: Nightride FM is CH 01. Star a station: it is selected on the next open. Star it again to clear.
 - [ ] Night City scene renders (animated noir skyline) and a single UFO flyover appears within a minute or so.
 
 ## Chat

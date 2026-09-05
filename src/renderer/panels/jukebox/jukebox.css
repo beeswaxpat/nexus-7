@@ -407,3 +407,38 @@
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
 }
+/* favorite star: quiet until hover, gold when set (the starred station is
+   selected on every open) */
+.jukebox__star {
+  flex: 0 0 auto;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 0 2px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-faint);
+  opacity: 0.35;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: opacity 120ms ease, color 120ms ease, transform 120ms ease;
+}
+.jukebox__station:hover .jukebox__star,
+.jukebox__star:focus-visible {
+  opacity: 0.85;
+  outline: none;
+}
+.jukebox__star:hover {
+  transform: scale(1.2);
+}
+.jukebox__station.is-fav .jukebox__star {
+  opacity: 1;
+  color: var(--neon-gold, #ffd166);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-gold, #ffd166) 60%, transparent);
+}
+.jukebox__station:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}

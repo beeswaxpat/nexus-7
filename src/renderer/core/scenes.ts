@@ -15,7 +15,7 @@ import { defaultSettings } from '../../shared/constants';
 import type { AppContext } from '../app-context';
 import type { SceneSettings } from '../../shared/types';
 import { el } from './dom';
-import { SCENES_CHANGED } from './events';
+import { LAYOUT_CHANGED, SCENES_CHANGED } from './events';
 import { mountGlobe } from '../panels/globe/globe';
 import { mountNightCity } from '../panels/noir/night-city';
 
@@ -66,16 +66,18 @@ export function mountScenes(
     }
   }
 
-  /** Reclaim layout space in the DEFAULT arrangement when a scene is hidden. */
+  /** Reclaim layout space when a scene is hidden: collapse the center graphic
+   * row, or shrink whichever top-level slot currently holds the corner wrapper
+   * (layout-swap can move it anywhere, so the class follows the wrapper). */
   function reclaim(host: HTMLElement, hidden: boolean): void {
     if (host === centerHost) {
       centerCell.closest('.cc')?.classList.toggle('cc--scene-hidden', hidden);
-    } else {
-      const p = cornerHost.parentElement;
-      if (p && p.classList.contains('panel--chat')) {
-        p.classList.toggle('panel--scene-hidden', hidden);
-      }
+      return;
     }
+    for (const stale of document.querySelectorAll('.nx-scene-hidden')) {
+      if (stale !== cornerHost.parentElement) stale.classList.remove('nx-scene-hidden');
+    }
+    cornerHost.parentElement?.classList.toggle('nx-scene-hidden', hidden);
   }
 
   function controls(host: HTMLElement, id: SceneId, hidden: boolean): HTMLElement {
@@ -173,6 +175,13 @@ export function mountScenes(
   // The Settings modal edits settings.scenes too; it broadcasts after persisting
   // (ctx.settings is already refreshed), so a full re-render picks it up.
   window.addEventListener(SCENES_CHANGED, renderAll);
+  // A panel swap re-parents the corner wrapper: move the collapsed-slot class with it.
+  window.addEventListener(LAYOUT_CHANGED, () => {
+    const c = cfg();
+    const cornerId = sceneFor(cornerHost);
+    const hidden = cornerId === 'wormhole' ? !c.showWormhole : !c.showNightCity;
+    reclaim(cornerHost, hidden);
+  });
 
   renderAll();
 }

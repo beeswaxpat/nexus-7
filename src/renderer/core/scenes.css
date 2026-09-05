@@ -110,6 +110,9 @@
 .cc.cc--scene-hidden {
   grid-template-rows: 34px auto auto auto minmax(190px, 1.6fr);
 }
-.col--right .panel.panel--scene-hidden {
-  flex: 0 0 34px;
+/* any top-level slot holding a hidden corner scene collapses to its SHOW strip
+   (!important: col-resize writes inline flex on the left boxes) */
+.col--right .panel.nx-scene-hidden,
+.col--left .box.nx-scene-hidden {
+  flex: 0 0 34px !important;
 }

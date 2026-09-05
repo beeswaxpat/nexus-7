@@ -23,12 +23,13 @@ interface Station {
 // (Nightride FM's Chillsynth/Nightride/Datawave channels) and ice1.somafm.com
 // (ambient/electro) · both are allowlisted in the index.html CSP (media-src). Note
 // stream.nightride.fm returns 405 on HEAD, so verification used ranged GET (200
-// audio/mpeg, real bytes pulled) as the authoritative check. Chillsynth leads
-// (CH 01) and is the playBtn nothing-selected fallback; a working synth station
-// is first by design.
+// audio/mpeg, real bytes pulled) as the authoritative check. Nightride FM leads
+// (CH 01) and is the playBtn nothing-selected fallback. A starred FAVORITE (the
+// star on each row, one at a time) is selected on every open ahead of the last
+// played station; both are remembered by NAME so reordering never shifts them.
 const STATIONS: Station[] = [
-  { name: 'Chillsynth', genre: 'Chill Synth', url: 'https://stream.nightride.fm/chillsynth.mp3' },
   { name: 'Nightride FM', genre: 'Synthwave', url: 'https://stream.nightride.fm/nightride.mp3' },
+  { name: 'Chillsynth', genre: 'Chill Synth', url: 'https://stream.nightride.fm/chillsynth.mp3' },
   { name: 'Datawave', genre: 'Darksynth', url: 'https://stream.nightride.fm/datawave.mp3' },
   { name: 'Space Station', genre: 'Space Electronica', url: 'https://ice1.somafm.com/spacestation-128-mp3' },
   { name: 'Synphaera', genre: 'Space Ambient', url: 'https://ice1.somafm.com/synphaera-128-mp3' },
@@ -50,9 +51,14 @@ const pad2 = (n: number): string => String(n).padStart(2, '0');
 // the deck just shows the remembered station selected and the play button lit.
 const MEMORY_KEY = 'nexus7.jukebox';
 interface JukeboxMemory {
+  /** legacy index (pre-0.1.3); superseded by stationName */
   station?: number;
+  stationName?: string;
+  favorite?: string;
   volume?: number;
 }
+const stationIndex = (name: string | undefined): number =>
+  typeof name === 'string' ? STATIONS.findIndex((s) => s.name === name) : -1;
 function readMemory(): JukeboxMemory {
   try {
     const raw = localStorage.getItem(MEMORY_KEY);
@@ -141,17 +147,53 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
 
   // --- station list ------------------------------------------------------------
   const list = el('div', { class: 'jukebox__list' });
+  let favorite = stationIndex(remembered.favorite);
+  const starBtns: HTMLButtonElement[] = [];
   const stationBtns = STATIONS.map((s, i) => {
+    const star = el('button', {
+      class: 'jukebox__star',
+      type: 'button',
+      title: 'Star this station: it is selected every time NEXUS-7 opens',
+      'aria-label': `Star ${s.name}`,
+      'aria-pressed': 'false',
+      text: '★'
+    });
+    starBtns.push(star);
+    // the row is a div (not a button) so the star can be a real button inside it
     const b = el(
-      'button',
-      { class: 'jukebox__station', type: 'button' },
+      'div',
+      { class: 'jukebox__station', role: 'button', tabindex: '0', 'aria-label': `Play ${s.name}` },
       el('span', { class: 'jukebox__station-idx', text: pad2(i + 1) }),
       el('span', { class: 'jukebox__station-name', text: s.name }),
-      el('span', { class: 'jukebox__station-genre', text: s.genre })
+      el('span', { class: 'jukebox__station-genre', text: s.genre }),
+      star
     );
-    b.addEventListener('click', () => selectStation(i, true));
+    b.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.jukebox__star')) return;
+      selectStation(i, true);
+    });
+    b.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectStation(i, true);
+      }
+    });
+    star.addEventListener('click', (e) => {
+      e.stopPropagation();
+      favorite = favorite === i ? -1 : i;
+      writeMemory({ favorite: favorite >= 0 ? STATIONS[favorite].name : undefined });
+      renderStars();
+    });
     return b;
   });
+  function renderStars(): void {
+    stationBtns.forEach((b, i) => {
+      const on = i === favorite;
+      b.classList.toggle('is-fav', on);
+      starBtns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  renderStars();
   list.append(...stationBtns);
 
   const root = el(
@@ -190,17 +232,28 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     nowName.textContent = s.name;
     nowGenre.textContent = s.genre;
     audio.src = s.url;
-    if (manual) writeMemory({ station: i });
+    if (manual) writeMemory({ station: i, stationName: s.name });
     if (autoplay) play();
+  }
+
+  /** Favorite first, then the last played (by name, legacy index as fallback). */
+  function startStation(): number {
+    if (favorite >= 0) return favorite;
+    const byName = stationIndex(remembered.stationName);
+    if (byName >= 0) return byName;
+    return typeof remembered.station === 'number' && remembered.station >= 0 && remembered.station < STATIONS.length
+      ? remembered.station
+      : -1;
+  }
+  // show the start station selected on mount (no autoplay: the gesture rule)
+  {
+    const start = startStation();
+    if (start >= 0) selectStation(start, false, false);
   }
 
   playBtn.addEventListener('click', () => {
     if (current < 0) {
-      const first =
-        typeof remembered.station === 'number' && remembered.station >= 0 && remembered.station < STATIONS.length
-          ? remembered.station
-          : 0;
-      selectStation(first, true);
+      selectStation(Math.max(0, startStation()), true);
       return;
     }
     if (playing) {

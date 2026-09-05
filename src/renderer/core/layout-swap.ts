@@ -6,7 +6,7 @@
 
 import './layout-swap.css';
 import type { AppContext } from '../app-context';
-import { LAYOUT_RESET } from './events';
+import { LAYOUT_CHANGED, LAYOUT_RESET } from './events';
 
 /** Swappable top-level slots (container element ids). The ticker is intentionally out. */
 const SLOT_IDS = ['box-friend', 'box-owner', 'box-chart', 'center', 'panel-news', 'panel-chat'] as const;
@@ -83,6 +83,7 @@ export function initLayoutSwap(ctx: AppContext): void {
     b.appendChild(ca);
     a.appendChild(cb);
     persist();
+    window.dispatchEvent(new CustomEvent(LAYOUT_CHANGED));
   }
 
   /** Current slotId -> panelId arrangement, read from the tagged content nodes. */
@@ -114,6 +115,7 @@ export function initLayoutSwap(ctx: AppContext): void {
       const node = byPanel.get(want);
       if (node && node.parentElement !== slot) slot.appendChild(node);
     }
+    window.dispatchEvent(new CustomEvent(LAYOUT_CHANGED));
   }
 
   applyLayout(ctx?.settings?.layout);

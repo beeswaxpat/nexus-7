@@ -21,6 +21,8 @@ export const USERNAME_CHANGED = 'nexus:username-changed';
 export const PASSPHRASE_RESET = 'nexus:passphrase-reset';
 /** Ask layout-swap to put every panel back in its original slot. */
 export const LAYOUT_RESET = 'nexus:layout-reset';
+/** Fired by layout-swap after any re-parent (swap, restore, reset). */
+export const LAYOUT_CHANGED = 'nexus:layout-changed';
 /** Ask col-resize to restore the default left-column box weights. */
 export const LEFTFLEX_RESET = 'nexus:leftflex-reset';
 

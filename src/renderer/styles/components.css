@@ -137,7 +137,23 @@
   grid-template-rows: minmax(90px, 1fr) auto auto auto minmax(190px, 1.35fr);
   gap: var(--gap);
   min-height: 0;
-  overflow: hidden;
+  /* clip sideways; if a swap drops the command center into a slot too short
+     for its rows, it scrolls instead of silently cutting off COMMS */
+  overflow: hidden auto;
+}
+/* a swapped-in short slot (the right-column panels, the left boxes): shrink the
+   graphic row first, then let COMMS take a smaller floor, then scroll */
+@container (max-height: 559px) {
+  .cc {
+    /* max-content rows: the instrument cluster keeps its height and the
+       column scrolls, instead of the auto tracks collapsing onto each other */
+    grid-template-rows: minmax(60px, 0.6fr) max-content max-content max-content minmax(140px, 1fr);
+  }
+}
+@container (max-height: 420px) {
+  .cc {
+    grid-template-rows: 34px max-content max-content max-content minmax(120px, 1fr);
+  }
 }
 .cc > div {
   min-height: 0;

@@ -122,8 +122,12 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
   label.className = 'btc-chart__label';
   label.textContent = 'BITCOIN · BTC/USD';
   label.setAttribute('aria-hidden', 'true');
-  container.classList.add('btc-chart');
-  container.replaceChildren(host, empty, label);
+  // ONE root node so layout-swap can move the whole chart (canvas + empty note +
+  // label) between slots, and so the ResizeObserver follows it wherever it goes.
+  const root = document.createElement('div');
+  root.className = 'btc-chart';
+  root.append(host, empty, label);
+  container.replaceChildren(root);
 
   let chart: IChartApi;
   let series: ISeriesApi<'Candlestick'>;
@@ -233,15 +237,15 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
       resize(rect.width, rect.height);
     }
   });
-  ro.observe(container);
+  ro.observe(root);
   // Initial sizing from the current box (ResizeObserver also fires once on observe,
   // but this covers environments where layout is already settled).
-  resize(container.clientWidth, container.clientHeight);
+  resize(root.clientWidth, root.clientHeight);
 
   // Best-effort teardown if the host element is ever removed from the DOM. Keeps
   // the WS-fed chart from leaking a detached canvas + observer during dev HMR.
   const mo = new MutationObserver(() => {
-    if (!container.isConnected) {
+    if (!root.isConnected) {
       try {
         ro.disconnect();
         mo.disconnect();
@@ -253,7 +257,5 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
       }
     }
   });
-  if (container.parentNode) {
-    mo.observe(container.parentNode, { childList: true });
-  }
+  mo.observe(document.body, { childList: true, subtree: true });
 }

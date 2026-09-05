@@ -5,6 +5,9 @@
 
 .nx-swap-slot {
   position: relative;
+  /* size container so a panel dropped into a shorter slot can adapt (the
+     command center collapses its graphic row and scrolls, see components.css) */
+  container-type: size;
 }
 
 .nx-grip {
