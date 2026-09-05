@@ -575,7 +575,7 @@ const CHROME_P_TELEM = 'HILBERT MANIFOLD // ORTHOGONAL REALITIES';
 /** Land dot limb-darkening buckets on view-z (brightness index 0..3). */
 const LAND_BUCKET_Z = [0.22, 0.48, 0.76];
 /** Land dot alpha multiplier (the sprites carry their own alpha ramps). */
-const LAND_ALPHA = 0.92;
+const LAND_ALPHA = 0.78;
 /** City lights: warm amber sprite, size relative to spriteCssDia, twinkle rate. */
 const CITY_RGB: [number, number, number] = [255, 214, 140];
 const CITY_SIZE_MUL = 1.15;
@@ -1183,7 +1183,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
   /** Rebuild every dot sprite (sized to the current R/dpr); called from resize(). */
   function buildSprites(): void {
     const sRad = 2 * Math.sqrt(Math.PI / SPHERE_N); // ~0.0272 (unit-sphere dot radius)
-    const dotDia = Math.max(2.2, Math.min(9, sRad * R * 1.7)); // nominal CSS px diameter
+    const dotDia = Math.max(2.2, Math.min(6.5, sRad * R * 1.45)); // nominal CSS px diameter
     spriteCssDia = dotDia * 1.6; // include the glow halo
     daySprites = DAY_STYLES.map((s) => makeSprite(s));
     rebuildNightSprites(fngValue); // honor the live mood, not the neutral baseline
@@ -2359,8 +2359,11 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
         g.globalCompositeOperation = 'lighter';
       }
     }
-    // 2) continents: the dot field, front hemisphere only
+    // 2) continents: the dot field, front hemisphere only. Drawn source-over,
+    // NOT additive: at panel sizes the glow halos overlap and 'lighter' stacked
+    // them to a blinding white; normal blending keeps the amber / cyan reading.
     {
+      g.globalCompositeOperation = 'source-over';
       const f = DOTS;
       const sz = spriteCssDia * rs;
       const half = sz * 0.5;
@@ -2390,6 +2393,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
         }
         g.drawImage(sprite, cx + x1 * Rearth - half, cy - y2 * Rearth - half, sz, sz);
       }
+      g.globalCompositeOperation = 'lighter';
     }
     // 3) city lights on the night side
     if (citySprites.length === 2) {
