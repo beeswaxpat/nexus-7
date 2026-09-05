@@ -50,9 +50,9 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 ## Media tabs
 
-- [ ] Jukebox: click Chillsynth (CH 01) and confirm audio plays and the equalizer animates. Pick another station and change the volume; after a restart the same station is selected (not playing) at the same volume.
+- [ ] Jukebox: click Nightride FM (CH 01) and confirm audio plays and the equalizer animates. Pick another station and change the volume; after a restart the same station is selected (not playing) at the same volume.
 - [ ] TV: Unmute brings audio up and the button becomes Mute; Mute silences it again.
-- [ ] MONITOR tab: cams load for several presets (New York, ISS live Earth, and at least one other).
+- [ ] MONITOR tab: cams load for several presets (Tokyo, ISS live Earth, and at least one other).
 - [ ] TV tab loads a live stream; Unmute brings up audio.
 - [ ] At the minimum window size (1024x640) the COMMS message list is still visible and the emoji strip scrolls sideways instead of wrapping.
 

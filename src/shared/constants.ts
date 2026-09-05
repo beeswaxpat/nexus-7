@@ -207,6 +207,7 @@ export function defaultSettings(): Settings {
     liveTvUrl: DEFAULT_LIVE_TV_URL,
     monitorUrl: DEFAULT_MONITOR_URL,
     activeRightTab: 'monitor',
+    jukebox: { station: '', favorite: '', volume: 80 },
     chaos: {
       wormhole: true,
       banners: true,

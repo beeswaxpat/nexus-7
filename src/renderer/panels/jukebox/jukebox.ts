@@ -46,9 +46,12 @@ const EQ_BARS = 16;
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 
-// Last station + volume, remembered across runs (localStorage, renderer-only).
-// Restored on mount WITHOUT autoplay: the browser gesture rule still applies, so
-// the deck just shows the remembered station selected and the play button lit.
+// Last station + favorite + volume, remembered across runs in Settings.jukebox
+// (the packaged app serves the renderer on a random port, so localStorage is a
+// fresh origin every launch and cannot remember anything; it is kept only as a
+// same-session cache and the dev:web fallback). Restored on mount WITHOUT
+// autoplay: the browser gesture rule still applies, so the deck just shows the
+// start station selected and the play button lit.
 const MEMORY_KEY = 'nexus7.jukebox';
 interface JukeboxMemory {
   /** legacy index (pre-0.1.3); superseded by stationName */
@@ -59,7 +62,7 @@ interface JukeboxMemory {
 }
 const stationIndex = (name: string | undefined): number =>
   typeof name === 'string' ? STATIONS.findIndex((s) => s.name === name) : -1;
-function readMemory(): JukeboxMemory {
+function readLocal(): JukeboxMemory {
   try {
     const raw = localStorage.getItem(MEMORY_KEY);
     const m = raw ? (JSON.parse(raw) as JukeboxMemory) : {};
@@ -68,18 +71,44 @@ function readMemory(): JukeboxMemory {
     return {};
   }
 }
-function writeMemory(patch: JukeboxMemory): void {
+/** Settings.jukebox wins over the local cache (it is the one that survives a restart). */
+function readMemory(ctx: AppContext | undefined): JukeboxMemory {
+  const local = readLocal();
+  const j = ctx?.settings?.jukebox;
+  if (!j) return local;
+  return {
+    ...local,
+    stationName: j.station || local.stationName,
+    favorite: typeof j.favorite === 'string' ? j.favorite : local.favorite,
+    volume: typeof j.volume === 'number' && Number.isFinite(j.volume) ? j.volume : local.volume
+  };
+}
+function writeMemory(ctx: AppContext | undefined, patch: JukeboxMemory): void {
   try {
-    localStorage.setItem(MEMORY_KEY, JSON.stringify({ ...readMemory(), ...patch }));
+    localStorage.setItem(MEMORY_KEY, JSON.stringify({ ...readLocal(), ...patch }));
   } catch {
-    /* storage unavailable: nothing to remember */
+    /* storage unavailable: the settings write below still persists */
+  }
+  const j: Partial<{ station: string; favorite: string; volume: number }> = {};
+  if ('stationName' in patch) j.station = patch.stationName ?? '';
+  if ('favorite' in patch) j.favorite = patch.favorite ?? '';
+  if (typeof patch.volume === 'number') j.volume = patch.volume;
+  if (Object.keys(j).length === 0 || typeof ctx?.updateSettings !== 'function') return;
+  const p = ctx.updateSettings({ jukebox: j } as Parameters<typeof ctx.updateSettings>[0]);
+  if (p && typeof p.then === 'function') {
+    p.then(
+      (next) => {
+        if (next) ctx.settings = next;
+      },
+      () => undefined
+    );
   }
 }
 
 export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
   if (!container) return;
 
-  const remembered = readMemory();
+  const remembered = readMemory(ctx);
   const startVolume =
     typeof remembered.volume === 'number' && Number.isFinite(remembered.volume)
       ? Math.max(0, Math.min(100, Math.round(remembered.volume)))
@@ -147,7 +176,7 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
 
   // --- station list ------------------------------------------------------------
   const list = el('div', { class: 'jukebox__list' });
-  let favorite = stationIndex(remembered.favorite);
+  let favorite = stationIndex(remembered.favorite || undefined);
   const starBtns: HTMLButtonElement[] = [];
   const stationBtns = STATIONS.map((s, i) => {
     const star = el('button', {
@@ -181,7 +210,7 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     star.addEventListener('click', (e) => {
       e.stopPropagation();
       favorite = favorite === i ? -1 : i;
-      writeMemory({ favorite: favorite >= 0 ? STATIONS[favorite].name : undefined });
+      writeMemory(ctx, { favorite: favorite >= 0 ? STATIONS[favorite].name : '' });
       renderStars();
     });
     return b;
@@ -232,7 +261,7 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     nowName.textContent = s.name;
     nowGenre.textContent = s.genre;
     audio.src = s.url;
-    if (manual) writeMemory({ station: i, stationName: s.name });
+    if (manual) writeMemory(ctx, { station: i, stationName: s.name });
     if (autoplay) play();
   }
 
@@ -272,7 +301,7 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     audio.volume = v / 100;
     volVal.textContent = `VOL ${v}`;
   });
-  vol.addEventListener('change', () => writeMemory({ volume: Number(vol.value) }));
+  vol.addEventListener('change', () => writeMemory(ctx, { volume: Number(vol.value) }));
   // A station that survives the auto-advance walk is healthy; clear the guard so a
   // later transient blip on it gets a fresh full walk rather than instant give-up.
   audio.addEventListener('playing', () => {

@@ -159,6 +159,12 @@ export interface SceneSettings {
 }
 
 /** Persisted user settings (app.getPath('userData')/settings.json). */
+export interface JukeboxSettings {
+  station: string;
+  favorite: string;
+  volume: number;
+}
+
 export interface Settings {
   // Naming is historical: friendAssets backs the STONKS box (stocks); ownerAssets backs the CRYPTO box.
   friendAssets: string[]; // canonical keys, e.g. 'coingecko:ripple', 'yahoo:MSTR'
@@ -170,6 +176,8 @@ export interface Settings {
   /** Source for the MONITOR tab (public city/surveillance cams). Same forms as liveTvUrl. */
   monitorUrl: string;
   activeRightTab: 'news' | 'econ' | 'live' | 'jukebox' | 'monitor';
+  /** Jukebox memory: last station + starred favorite (by name, '' = none) + volume. */
+  jukebox: JukeboxSettings;
   chaos: ChaosSettings;
   /** Editable asset-box titles (click-to-rename in the UI; merged over defaults). */
   boxTitles: BoxTitles;
