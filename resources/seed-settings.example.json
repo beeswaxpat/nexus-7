@@ -26,18 +26,7 @@
     "owner": "CRYPTO"
   },
   "centerAsset": "coingecko:bitcoin",
-  "holdings": {
-    "yahoo:SPCX": 1,
-    "yahoo:TSLA": 1,
-    "yahoo:NVDA": 1,
-    "yahoo:AAPL": 1,
-    "yahoo:INTC": 1,
-    "coingecko:bitcoin": 0.01,
-    "coingecko:ethereum": 1,
-    "coingecko:solana": 1,
-    "coingecko:ripple": 1,
-    "coingecko:hyperliquid": 1
-  },
+  "holdings": {},
   "bugNutLabel": "TOTAL",
   "scenes": {
     "swapped": true,

@@ -216,18 +216,10 @@ export function defaultSettings(): Settings {
     boxTitles: { ...DEFAULT_BOX_TITLES },
     centerAsset: DEFAULT_CENTER_KEY,
     secondaryAsset: SECONDARY_DEFAULT_KEY,
-    holdings: {
-      'yahoo:SPCX': 1,
-      'yahoo:TSLA': 1,
-      'yahoo:NVDA': 1,
-      'yahoo:AAPL': 1,
-      'yahoo:INTC': 1,
-      'coingecko:bitcoin': 0.01,
-      'coingecko:ethereum': 1,
-      'coingecko:solana': 1,
-      'coingecko:ripple': 1,
-      'coingecko:hyperliquid': 1
-    },
+    // No holdings out of the box: every bag starts at zero and the TOTAL cells stay
+    // hidden until the user enters a quantity (a preset "1 of each" read as a
+    // phantom portfolio to new users). Saved profiles keep whatever they had.
+    holdings: {},
     scenes: {
       swapped: true,
       showWormhole: true,

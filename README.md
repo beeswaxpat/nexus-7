@@ -17,7 +17,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 - Two editable boxes: STONKS for stocks and CRYPTO for crypto, with live prices and 24h / 7d changes.
 - Click to add, remove, or re-point any asset.
-- Editable holdings (quantity per asset) feed a combined-portfolio TOTAL cell.
+- Editable holdings (quantity per asset) feed a combined-portfolio TOTAL cell. Everything starts at zero; click a row's market-cap cell to enter what you hold.
 - Privacy mode blurs dollar values and the portfolio total while leaving prices and percentages visible.
 
 ### Command center
