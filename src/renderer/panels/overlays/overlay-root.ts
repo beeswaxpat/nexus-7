@@ -17,6 +17,7 @@ import type { AppContext } from '../../app-context';
 import type { AssetQuote } from '../../../shared/types';
 import { btcMode, bannerFor, type BtcMode } from '../../core/reactions';
 import { findCenterQuote } from '../../core/center';
+import { CENTER_CHANGED, CHAOS_CHANGED } from '../../core/events';
 import { showBanner, clearBanner } from './banners';
 import { setCenterOverlay } from './hacked';
 import { mountPepe } from './pepe';
@@ -25,18 +26,19 @@ export function mountOverlays(container: HTMLElement, ctx: AppContext): void {
   if (!container) return;
   const host = container;
 
-  // chaos toggles (default-on per the spec; tolerate a missing settings object).
-  const chaos = ctx?.settings?.chaos ?? {
-    wormhole: true,
-    banners: true,
-    scanlines: true,
-    autoMessage: false
-  };
+  // chaos toggles (default-on; tolerate a missing settings object). Read LIVE
+  // through a getter so the Settings modal's toggles apply without a remount.
+  const chaosDefaults = { wormhole: true, banners: true, scanlines: true, autoMessage: false };
+  const readChaos = (): typeof chaosDefaults => ({ ...chaosDefaults, ...(ctx?.settings?.chaos ?? {}) });
+  let chaos = readChaos();
 
   // --- scanlines: mirror chaos.scanlines onto <body data-scanlines> ----------
-  if (typeof document !== 'undefined' && document.body) {
-    document.body.setAttribute('data-scanlines', chaos.scanlines ? 'on' : 'off');
-  }
+  const applyScanlines = (): void => {
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.setAttribute('data-scanlines', chaos.scanlines ? 'on' : 'off');
+    }
+  };
+  applyScanlines();
 
   // pre-build the center text nodes so the first reveal is instant (no rebuild).
   setCenterOverlay(host, 'none');
@@ -101,8 +103,19 @@ export function mountOverlays(container: HTMLElement, ctx: AppContext): void {
 
   // Re-evaluate immediately when the user swaps the center asset in the picker.
   const onCenterChanged = (): void => reapply();
-  window.addEventListener('nexus:center-changed', onCenterChanged);
-  unsubs.push(() => window.removeEventListener('nexus:center-changed', onCenterChanged));
+  window.addEventListener(CENTER_CHANGED, onCenterChanged);
+  unsubs.push(() => window.removeEventListener(CENTER_CHANGED, onCenterChanged));
+
+  // Settings modal flipped a chaos toggle: re-read, re-apply scanlines, and force
+  // the mode/banner through again (lastMode reset so the center text re-evaluates).
+  const onChaosChanged = (): void => {
+    chaos = readChaos();
+    applyScanlines();
+    lastMode = null;
+    reapply();
+  };
+  window.addEventListener(CHAOS_CHANGED, onChaosChanged);
+  unsubs.push(() => window.removeEventListener(CHAOS_CHANGED, onChaosChanged));
 
   // Pepe overlay: random thumbnails + the "this is fine" image on BTC dumps.
   mountPepe(host, ctx);

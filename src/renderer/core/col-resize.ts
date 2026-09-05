@@ -13,6 +13,7 @@ import './col-resize.css';
 import { defaultSettings } from '../../shared/constants';
 import type { AppContext } from '../app-context';
 import type { Settings } from '../../shared/types';
+import { LEFTFLEX_RESET } from './events';
 
 /** The three resizable slot ids, top to bottom. */
 const SLOT_IDS = ['box-friend', 'box-owner', 'box-chart'] as const;
@@ -73,6 +74,16 @@ export function mountColResize(col: HTMLElement, ctx: AppContext): void {
   }
 
   applyFlex();
+
+  // Settings modal: restore the default weights (same as a divider double-click).
+  window.addEventListener(LEFTFLEX_RESET, () => {
+    const d = defaultFlex();
+    flex.friend = d.friend;
+    flex.owner = d.owner;
+    flex.chart = d.chart;
+    applyFlex();
+    persist();
+  });
 
   // Build the two dividers. Each one resizes the pair of boxes ABOVE and BELOW it.
   makeDivider(friendBox, ownerBox, 'friend', 'owner', friendBox); // before owner

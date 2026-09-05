@@ -84,6 +84,13 @@ export function registerIpc(win: BrowserWindow): void {
   ipcMain.on(IPC.WINDOW_CLOSE, () => {
     if (!win.isDestroyed()) win.close();
   });
+  // Mirror maximize changes (button, titlebar double-click, OS snap) to the titlebar.
+  const sendMax = (): void => {
+    if (!win.isDestroyed()) win.webContents.send(IPC.WINDOW_MAXIMIZE_STATE, win.isMaximized());
+  };
+  win.on('maximize', sendMax);
+  win.on('unmaximize', sendMax);
+  win.webContents.on('did-finish-load', sendMax);
 
   // --- true fullscreen (covers the taskbar, unlike maximize) ----------------
   ipcMain.on(IPC.WINDOW_FULLSCREEN_TOGGLE, () => {

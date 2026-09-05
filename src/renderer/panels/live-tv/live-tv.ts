@@ -309,11 +309,21 @@ export function mountLiveTv(container: HTMLElement, ctx: AppContext, opts?: Live
     }, LOAD_TIMEOUT_MS);
   };
 
-  // --- unmute via the YouTube IFrame API postMessage protocol ------------
+  // --- mute / unmute via the YouTube IFrame API postMessage protocol ------
+  // Streams start muted (autoplay rule). The button toggles: first click brings
+  // audio up, the next mutes again, so a loud feed can be silenced in place.
+  let unmuted = false;
+  const setUnmuteUI = (on: boolean): void => {
+    unmuted = on;
+    unmuteBtn.classList.toggle('is-active', on);
+    unmuteBtn.textContent = on ? 'Mute' : 'Unmute';
+    const label = on ? 'Mute the live stream' : 'Unmute the live stream';
+    unmuteBtn.title = label;
+    unmuteBtn.setAttribute('aria-label', label);
+  };
   unmuteBtn.addEventListener('click', () => {
     const win = iframe?.contentWindow;
     if (!win) return;
-    // unMute then setVolume so the click reliably brings audio up.
     const send = (func: string, args: unknown[] = []): void => {
       try {
         win.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
@@ -321,11 +331,16 @@ export function mountLiveTv(container: HTMLElement, ctx: AppContext, opts?: Live
         /* cross-origin postMessage can throw in odd hosts; ignore */
       }
     };
+    if (unmuted) {
+      send('mute');
+      setUnmuteUI(false);
+      return;
+    }
+    // unMute then setVolume so the click reliably brings audio up.
     send('unMute');
     send('setVolume', [100]);
     send('playVideo');
-    unmuteBtn.classList.add('is-active');
-    unmuteBtn.textContent = 'Unmuted';
+    setUnmuteUI(true);
   });
 
   // --- save / change source ----------------------------------------------
@@ -333,9 +348,8 @@ export function mountLiveTv(container: HTMLElement, ctx: AppContext, opts?: Live
     const value = sourceInput.value.trim();
     const rawUrl = value || defaultUrl;
 
-    // reset the unmute affordance for the new stream
-    unmuteBtn.classList.remove('is-active');
-    unmuteBtn.textContent = 'Unmute';
+    // a new stream starts muted again (autoplay rule): reset the toggle
+    setUnmuteUI(false);
 
     loadStream(rawUrl);
 

@@ -85,6 +85,43 @@
   }
 }
 
+/* source-health LEDs: five tiny dots, hover for the source name + last update.
+   They ride the drag region (no clicks needed) and sit visually centered. */
+.titlebar__leds {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  margin-right: 14px;
+  -webkit-app-region: no-drag;
+}
+.titlebar__led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  opacity: 0.55;
+  transition: background 300ms ease, box-shadow 300ms ease, opacity 300ms ease;
+}
+.titlebar__led[data-state='ok'] {
+  background: var(--neon-green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--neon-green) 70%, transparent);
+  opacity: 0.9;
+}
+.titlebar__led[data-state='error'] {
+  background: var(--neon-red);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--neon-red) 80%, transparent);
+  opacity: 1;
+  animation: titlebar-led-blink 1.4s ease-in-out infinite;
+}
+@keyframes titlebar-led-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .titlebar__led[data-state='error'] { animation: none; }
+}
+
 .titlebar__controls {
   display: flex;
   height: 100%;

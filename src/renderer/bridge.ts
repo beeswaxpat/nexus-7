@@ -39,6 +39,7 @@ export interface Bridge {
   // Electron preload emits it).
   toggleFullscreen(): void;
   onFullscreenState?(cb: (isFullscreen: boolean) => void): Unsubscribe;
+  onMaximizeState?(cb: (isMaximized: boolean) => void): Unsubscribe;
   // Optional chat transport: present in the Electron preload bridge (MQTT runs in
   // main), absent in the dev:web browser-mock (where mqtt-client falls back to the
   // vendored window.mqtt directly, which works fine in a normal browser).

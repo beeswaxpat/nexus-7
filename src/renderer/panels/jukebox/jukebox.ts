@@ -45,11 +45,42 @@ const EQ_BARS = 16;
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 
+// Last station + volume, remembered across runs (localStorage, renderer-only).
+// Restored on mount WITHOUT autoplay: the browser gesture rule still applies, so
+// the deck just shows the remembered station selected and the play button lit.
+const MEMORY_KEY = 'nexus7.jukebox';
+interface JukeboxMemory {
+  station?: number;
+  volume?: number;
+}
+function readMemory(): JukeboxMemory {
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    const m = raw ? (JSON.parse(raw) as JukeboxMemory) : {};
+    return m && typeof m === 'object' ? m : {};
+  } catch {
+    return {};
+  }
+}
+function writeMemory(patch: JukeboxMemory): void {
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify({ ...readMemory(), ...patch }));
+  } catch {
+    /* storage unavailable: nothing to remember */
+  }
+}
+
 export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
   if (!container) return;
 
+  const remembered = readMemory();
+  const startVolume =
+    typeof remembered.volume === 'number' && Number.isFinite(remembered.volume)
+      ? Math.max(0, Math.min(100, Math.round(remembered.volume)))
+      : 80;
+
   const audio = el('audio', { preload: 'none' }) as HTMLAudioElement;
-  audio.volume = 0.8;
+  audio.volume = startVolume / 100;
 
   let current = -1;
   let playing = false;
@@ -159,12 +190,17 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     nowName.textContent = s.name;
     nowGenre.textContent = s.genre;
     audio.src = s.url;
+    if (manual) writeMemory({ station: i });
     if (autoplay) play();
   }
 
   playBtn.addEventListener('click', () => {
     if (current < 0) {
-      selectStation(0, true);
+      const first =
+        typeof remembered.station === 'number' && remembered.station >= 0 && remembered.station < STATIONS.length
+          ? remembered.station
+          : 0;
+      selectStation(first, true);
       return;
     }
     if (playing) {
@@ -183,6 +219,7 @@ export function mountJukebox(container: HTMLElement, ctx: AppContext): void {
     audio.volume = v / 100;
     volVal.textContent = `VOL ${v}`;
   });
+  vol.addEventListener('change', () => writeMemory({ volume: Number(vol.value) }));
   // A station that survives the auto-advance walk is healthy; clear the guard so a
   // later transient blip on it gets a fresh full walk rather than instant give-up.
   audio.addEventListener('playing', () => {

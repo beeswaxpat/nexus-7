@@ -45,6 +45,7 @@ export interface NexusBridge {
   // reflect enter/exit, including F11 and OS-driven changes.
   toggleFullscreen(): void;
   onFullscreenState(cb: (isFullscreen: boolean) => void): Unsubscribe;
+  onMaximizeState(cb: (isMaximized: boolean) => void): Unsubscribe;
   // encrypted chat transport (MQTT runs in main; only ciphertext + topic cross here)
   chatConnect(topic: string): void;
   chatPublish(wireB64: string): void;
@@ -77,6 +78,7 @@ const nexus: NexusBridge = {
   closeWindow: () => ipcRenderer.send(IPC.WINDOW_CLOSE),
   toggleFullscreen: () => ipcRenderer.send(IPC.WINDOW_FULLSCREEN_TOGGLE),
   onFullscreenState: (cb) => subscribe(IPC.WINDOW_FULLSCREEN_STATE, cb),
+  onMaximizeState: (cb) => subscribe(IPC.WINDOW_MAXIMIZE_STATE, cb),
 
   chatConnect: (topic) => ipcRenderer.send(IPC.CHAT_CONNECT, topic),
   chatPublish: (wireB64) => ipcRenderer.send(IPC.CHAT_PUBLISH, wireB64),

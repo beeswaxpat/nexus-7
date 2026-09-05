@@ -17,6 +17,7 @@
 import type { AppContext } from '../../app-context';
 import { el, mount } from '../../core/dom';
 import { formatClock } from '../../core/format';
+import { CHAOS_CHANGED, PASSPHRASE_RESET, USERNAME_CHANGED } from '../../core/events';
 import { deriveKey, deriveTopic, encryptMsg, decryptMsg } from './crypto';
 import type { ChatMessage } from './crypto';
 import { createMqttClient } from './mqtt-client';
@@ -92,31 +93,35 @@ export function mountChatPanel(container: HTMLElement, ctx: AppContext): void {
   // --- structure -----------------------------------------------------------
   const dot = el('span', { class: 'chat__dot', 'aria-hidden': 'true' });
   const statusText = el('span', { class: 'chat__status-text', text: 'connecting' });
+  // The room you are IN is stated plainly; the button next to it is the action.
+  const roomLabel = el('span', { class: 'chat__room-label' });
   const roomBtn = el('button', {
     class: 'chat__btn chat__room',
     type: 'button'
   }) as HTMLButtonElement;
   const header = el('div', { class: 'chat__header' },
     el('span', { class: 'chat__title', text: 'COMMS' }),
+    roomLabel,
     roomBtn,
     el('span', { class: 'chat__status' }, dot, statusText)
   );
 
-  /** The button always offers the room you would hop TO. */
   function refreshRoomBtn(): void {
-    const goingPublic = room === 'private';
-    roomBtn.textContent = goingPublic ? 'PUBLIC CHAT' : 'PRIVATE CHAT';
-    roomBtn.title = goingPublic
-      ? 'Join the public room shared by every NEXUS-7 user'
-      : 'Back to your private passphrase room';
+    const inPublic = room === 'public';
+    roomLabel.textContent = inPublic ? 'PUBLIC ROOM' : 'PRIVATE ROOM';
+    roomLabel.classList.toggle('chat__room-label--public', inPublic);
+    roomLabel.title = inPublic
+      ? 'Shared by everyone running NEXUS-7. No history, no moderation.'
+      : 'Only people with your passphrase can read this room.';
+    roomBtn.textContent = inPublic ? 'GO PRIVATE' : 'GO PUBLIC';
+    roomBtn.title = inPublic
+      ? 'Switch to your private passphrase room'
+      : 'Switch to the public room shared by every NEXUS-7 user';
   }
   refreshRoomBtn();
 
-  roomBtn.addEventListener('click', () => {
-    room = room === 'private' ? 'public' : 'private';
-    saveRoom(room);
-    refreshRoomBtn();
-    // tear down the current socket and rejoin on the new topic/key
+  /** Tear down the socket and rejoin on the current room's topic/key. */
+  function rejoin(note: string): void {
     stopAutoMessage();
     try {
       mqtt?.disconnect();
@@ -129,13 +134,41 @@ export function mountChatPanel(container: HTMLElement, ctx: AppContext): void {
     // never resolves; the private path re-prompts fresh when needed)
     list.querySelectorAll('.chat__prompt').forEach((c) => c.remove());
     setStatus('connecting');
-    addSystem(
+    if (note) addSystem(note);
+    void connect();
+  }
+
+  roomBtn.addEventListener('click', () => {
+    room = room === 'private' ? 'public' : 'private';
+    saveRoom(room);
+    refreshRoomBtn();
+    rejoin(
       room === 'public'
         ? 'joining the PUBLIC room (visible to every NEXUS-7 user, no history)'
         : 'back to your PRIVATE room'
     );
-    void connect();
   });
+
+  // --- signals from the Settings modal --------------------------------------
+  const onUsernameChanged = (e: Event): void => {
+    const name = (e as CustomEvent<{ name?: string }>).detail?.name;
+    const next = typeof name === 'string' ? name.trim().slice(0, 24) : '';
+    if (next === username) return;
+    username = next;
+    addSystem(next ? `callsign set to ${next}` : 'callsign cleared, you will be asked on the next send');
+  };
+  const onPassphraseReset = (): void => {
+    clearPassphrase();
+    if (room === 'private') {
+      rejoin('private passphrase cleared, enter a new one to rejoin');
+    } else {
+      addSystem('private passphrase cleared');
+    }
+  };
+  const onChaosChanged = (): void => startAutoMessage(); // re-reads chaos.autoMessage
+  window.addEventListener(USERNAME_CHANGED, onUsernameChanged);
+  window.addEventListener(PASSPHRASE_RESET, onPassphraseReset);
+  window.addEventListener(CHAOS_CHANGED, onChaosChanged);
 
   const list = el('div', { class: 'chat__list', role: 'log', 'aria-live': 'polite' });
 
@@ -319,6 +352,16 @@ export function mountChatPanel(container: HTMLElement, ctx: AppContext): void {
     }
     if (disposed) return;
 
+    // Say once per join which room this is: a fresh launch lands in PUBLIC with an
+    // empty list, and nothing else tells the user who can read what they type.
+    if (list.childElementCount === 0) {
+      addSystem(
+        room === 'public'
+          ? 'PUBLIC room: anyone running NEXUS-7 can read this. GO PRIVATE for a passphrase room.'
+          : 'PRIVATE room: only people with your passphrase can read this.'
+      );
+    }
+
     mqtt = createMqttClient({
       topic,
       onMessage: (payload) => void onPayload(payload),
@@ -469,6 +512,9 @@ export function mountChatPanel(container: HTMLElement, ctx: AppContext): void {
   // --- teardown ------------------------------------------------------------
   host.__chatCleanup = () => {
     disposed = true;
+    window.removeEventListener(USERNAME_CHANGED, onUsernameChanged);
+    window.removeEventListener(PASSPHRASE_RESET, onPassphraseReset);
+    window.removeEventListener(CHAOS_CHANGED, onChaosChanged);
     stopAutoMessage();
     try {
       mqtt?.disconnect();
@@ -520,6 +566,15 @@ function savePassphrase(value: string): void {
     localStorage.setItem(PASSPHRASE_KEY, value);
   } catch {
     /* storage may be unavailable; chat just will not persist the phrase */
+  }
+}
+
+/** Forget the stored passphrase (Settings: reset private room). */
+function clearPassphrase(): void {
+  try {
+    localStorage.removeItem(PASSPHRASE_KEY);
+  } catch {
+    /* ignore */
   }
 }
 

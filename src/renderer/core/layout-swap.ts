@@ -6,6 +6,7 @@
 
 import './layout-swap.css';
 import type { AppContext } from '../app-context';
+import { LAYOUT_RESET } from './events';
 
 /** Swappable top-level slots (container element ids). The ticker is intentionally out. */
 const SLOT_IDS = ['box-friend', 'box-owner', 'box-chart', 'center', 'panel-news', 'panel-chat'] as const;
@@ -116,4 +117,13 @@ export function initLayoutSwap(ctx: AppContext): void {
   }
 
   applyLayout(ctx?.settings?.layout);
+
+  // Settings modal: put every panel back where it was mounted (its tag is its
+  // original slot id), then persist the identity map.
+  window.addEventListener(LAYOUT_RESET, () => {
+    const identity: Record<string, string> = {};
+    for (const slot of slots) identity[slot.id] = slot.id;
+    applyLayout(identity);
+    persist();
+  });
 }

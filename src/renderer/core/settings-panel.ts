@@ -1,20 +1,31 @@
 // SETTINGS modal: a single fixed overlay (backdrop + centered card) opened from
-// the titlebar gear. Section "MEME IMAGES" lets the user add and manage their OWN
-// images (the app ships with none). Uploaded files are downscaled in-browser
-// (longest side <= 240px) and stored as small JPEG data: URLs in
-// settings.images.custom, so they survive across runs and feed straight into the
-// image overlay <img src>.
+// the titlebar gear. Sections: COMMS (callsign, private passphrase reset), CHAOS
+// (the reaction toggles), SCENES (arrangement + ULTRA), LAYOUT (reset panel
+// arrangement / box sizes), MEME IMAGES (the user's own overlay images), ABOUT.
+//
+// Every change persists through ctx.updateSettings and then broadcasts one of the
+// window events in core/events.ts, so the live panels apply it without a remount.
 //
 // Built with the core/dom el() helper; co-located CSS is imported (Vite). Fully
 // null-safe: it runs under the real Electron bridge AND the dev:web browser-mock,
 // so ctx and ctx.updateSettings may be missing. Only one instance opens at a
-// time. Every change persists then fires window 'nexus:images-changed' so the
-// overlay re-reads its pools live. No em-dashes in any visible copy.
+// time. No em-dashes in any visible copy.
 
 import './settings-panel.css';
 import type { AppContext } from '../app-context';
-import type { ImageSettings } from '../../shared/types';
+import type { ChaosSettings, ImageSettings, SceneSettings, Settings } from '../../shared/types';
+import { defaultSettings } from '../../shared/constants';
 import { el } from './dom';
+import {
+  CHAOS_CHANGED,
+  IMAGES_CHANGED,
+  LAYOUT_RESET,
+  LEFTFLEX_RESET,
+  PASSPHRASE_RESET,
+  SCENES_CHANGED,
+  USERNAME_CHANGED,
+  emit
+} from './events';
 
 /** Hard cap on user images (each is a small downscaled data URL). */
 const MAX_CUSTOM = 24;
@@ -85,11 +96,63 @@ async function persist(ctx: AppContext | null | undefined, next: ImageSettings):
       /* ignore */
     }
   }
+  emit(IMAGES_CHANGED);
+}
+
+/**
+ * Persist any settings patch (best-effort: dev:web may reject) and keep
+ * ctx.settings current either way, so the panels that read it live agree with
+ * what the modal shows. Returns true when the write went through.
+ */
+async function persistPatch(ctx: AppContext, patch: Partial<Settings>): Promise<boolean> {
   try {
-    window.dispatchEvent(new CustomEvent('nexus:images-changed'));
+    if (ctx?.updateSettings) {
+      const updated = await ctx.updateSettings(patch);
+      if (updated) ctx.settings = updated;
+      return true;
+    }
+  } catch {
+    /* fall through to the in-memory patch */
+  }
+  try {
+    if (ctx?.settings) ctx.settings = { ...ctx.settings, ...patch };
   } catch {
     /* ignore */
   }
+  return false;
+}
+
+// --- small form primitives (all scoped .nx-set-*) -----------------------------
+
+/** A labeled on/off switch row. `onChange` receives the new value. */
+function toggleRow(label: string, hint: string, checked: boolean, onChange: (on: boolean) => void): HTMLElement {
+  const input = el('input', { type: 'checkbox', class: 'nx-set-switch__input' }) as HTMLInputElement;
+  input.checked = checked;
+  input.addEventListener('change', () => onChange(input.checked));
+  const track = el('span', { class: 'nx-set-switch__track', 'aria-hidden': 'true' }, el('span', { class: 'nx-set-switch__knob' }));
+  const text = el('span', { class: 'nx-set-row__text' }, el('span', { class: 'nx-set-row__label', text: label }));
+  if (hint) text.append(el('span', { class: 'nx-set-row__hint', text: hint }));
+  return el('label', { class: 'nx-set-row nx-set-switch' }, text, input, track);
+}
+
+/** A labeled row with a secondary button on the right. */
+function actionRow(label: string, hint: string, buttonText: string, onClick: (btn: HTMLButtonElement) => void): HTMLElement {
+  const btn = el('button', { class: 'nx-set-btn', type: 'button' }, buttonText) as HTMLButtonElement;
+  btn.addEventListener('click', () => onClick(btn));
+  const text = el('span', { class: 'nx-set-row__text' }, el('span', { class: 'nx-set-row__label', text: label }));
+  if (hint) text.append(el('span', { class: 'nx-set-row__hint', text: hint }));
+  return el('div', { class: 'nx-set-row' }, text, btn);
+}
+
+/** Flash a short confirmation on a row button, then restore its text. */
+function flashBtn(btn: HTMLButtonElement, text: string): void {
+  const prior = btn.textContent;
+  btn.textContent = text;
+  btn.disabled = true;
+  window.setTimeout(() => {
+    btn.textContent = prior;
+    btn.disabled = false;
+  }, 1100);
 }
 
 /**
@@ -215,7 +278,111 @@ export function openSettings(ctx: AppContext): void {
     aboutBtn
   );
 
-  const body = el('div', { class: 'nx-set-body' }, section, aboutSection);
+  // --- COMMS: callsign + private passphrase ----------------------------------
+  const nameInput = el('input', {
+    type: 'text',
+    class: 'nx-set-input',
+    maxlength: '24',
+    placeholder: 'callsign',
+    autocomplete: 'off',
+    spellcheck: false,
+    'aria-label': 'Callsign shown next to your chat messages'
+  }) as HTMLInputElement;
+  nameInput.value = (ctx?.settings?.username ?? '').trim();
+  const nameNote = el('span', { class: 'nx-set-row__hint', text: 'Shown next to your messages. Enter to save.' });
+  const saveName = async (): Promise<void> => {
+    const next = nameInput.value.trim().slice(0, 24);
+    if (next === (ctx?.settings?.username ?? '').trim()) return;
+    await persistPatch(ctx, { username: next });
+    emit(USERNAME_CHANGED, { name: next });
+    nameNote.textContent = next ? `Saved: ${next}` : 'Cleared. You will be asked for a callsign on your next send.';
+  };
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      void saveName();
+    }
+  });
+  nameInput.addEventListener('blur', () => void saveName());
+  const nameRow = el(
+    'div',
+    { class: 'nx-set-row nx-set-row--stack' },
+    el('span', { class: 'nx-set-row__label', text: 'Callsign' }),
+    nameInput,
+    nameNote
+  );
+
+  const commsSection = el(
+    'section',
+    { class: 'nx-set-section' },
+    el('div', { class: 'nx-set-section-label', text: 'COMMS' }),
+    nameRow,
+    actionRow(
+      'Private room passphrase',
+      'Stored on this device only, never shown. Resetting asks for a new one the next time you enter the private room.',
+      'Reset',
+      (btn) => {
+        emit(PASSPHRASE_RESET);
+        flashBtn(btn, 'Cleared');
+      }
+    )
+  );
+
+  // --- CHAOS: the reaction toggles --------------------------------------------
+  const chaosNow = (): ChaosSettings => ({
+    ...defaultSettings().chaos,
+    ...(ctx?.settings?.chaos ?? {})
+  });
+  const setChaos = (patch: Partial<ChaosSettings>): void => {
+    void persistPatch(ctx, { chaos: { ...chaosNow(), ...patch } }).then(() => emit(CHAOS_CHANGED));
+  };
+  const c0 = chaosNow();
+  const chaosSection = el(
+    'section',
+    { class: 'nx-set-section' },
+    el('div', { class: 'nx-set-section-label', text: 'CHAOS' }),
+    el('div', { class: 'nx-set-hint', text: 'The price-driven theatrics. The accent recolor on pumps and dumps always stays on.' }),
+    toggleRow('Reaction banners', 'The blinking one-liner at the top on a 5% move or more.', c0.banners, (on) => setChaos({ banners: on })),
+    toggleRow('HACKED / LFG takeover', 'Giant center text on a 5% dump or a 20% pump.', c0.wormhole, (on) => setChaos({ wormhole: on })),
+    toggleRow('CRT scanlines', 'The drifting tube lines over the whole dashboard.', c0.scanlines, (on) => setChaos({ scanlines: on })),
+    toggleRow('Auto message', 'Posts "<callsign> NOT REAL" to the chat every 15 minutes.', c0.autoMessage, (on) => setChaos({ autoMessage: on }))
+  );
+
+  // --- SCENES: arrangement + ULTRA --------------------------------------------
+  const scenesNow = (): SceneSettings => ({
+    ...defaultSettings().scenes,
+    ...(ctx?.settings?.scenes ?? {})
+  });
+  const setScenes = (patch: Partial<SceneSettings>): void => {
+    void persistPatch(ctx, { scenes: { ...scenesNow(), ...patch } }).then(() => emit(SCENES_CHANGED));
+  };
+  const s0 = scenesNow();
+  const scenesSection = el(
+    'section',
+    { class: 'nx-set-section' },
+    el('div', { class: 'nx-set-section-label', text: 'SCENES' }),
+    toggleRow('Night City in the center', 'Off puts the Globe in the center and Night City in the corner.', s0.swapped, (on) => setScenes({ swapped: on })),
+    toggleRow('Show Globe', 'Hide it to give the neighbors its space.', s0.showWormhole, (on) => setScenes({ showWormhole: on })),
+    toggleRow('Show Night City', 'Hide it to give the neighbors its space.', s0.showNightCity, (on) => setScenes({ showNightCity: on })),
+    toggleRow('Night City ULTRA', 'Synthwave inversion: violet sky, retro sun, neon grid street.', s0.ultraCity, (on) => setScenes({ ultraCity: on }))
+  );
+
+  // --- LAYOUT: resets ---------------------------------------------------------
+  const layoutSection = el(
+    'section',
+    { class: 'nx-set-section' },
+    el('div', { class: 'nx-set-section-label', text: 'LAYOUT' }),
+    actionRow('Panel arrangement', 'Put every panel back in its original slot (drag a panel grip to rearrange).', 'Reset', (btn) => {
+      emit(LAYOUT_RESET);
+      flashBtn(btn, 'Done');
+    }),
+    actionRow('Left column box sizes', 'Restore the default heights of the two asset boxes and the chart.', 'Reset', (btn) => {
+      emit(LEFTFLEX_RESET);
+      flashBtn(btn, 'Done');
+    })
+  );
+
+  const body = el('div', { class: 'nx-set-body' }, commsSection, chaosSection, scenesSection, layoutSection, section, aboutSection);
 
   const closeBtn = el('button', {
     class: 'nx-set-close',

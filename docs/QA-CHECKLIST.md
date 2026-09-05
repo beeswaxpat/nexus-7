@@ -19,20 +19,25 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 ## Chat
 
-- [ ] Chat connects: the status indicator goes green.
+- [ ] Chat connects: the status indicator goes green, the header reads PUBLIC ROOM, and a system line explains who can read the room.
+- [ ] Titlebar LEDs turn green as sources load; hovering one shows the source and its last update. Double-clicking the titlebar maximizes / restores and the maximize button glyph follows.
 - [ ] Public room: with a SECOND instance of NEXUS-7 running, send a message in the PUBLIC room from one instance and confirm it arrives in the other.
 - [ ] Private room: switch to a private room, set a passphrase, and confirm a second instance with the SAME passphrase exchanges messages while one with a different passphrase sees nothing.
 
 ## Settings
 
-- [ ] Settings gear opens the settings panel.
+- [ ] Settings gear opens the settings panel with COMMS, CHAOS, SCENES, LAYOUT, MEME IMAGES, and ABOUT sections.
+- [ ] Change the callsign; the chat posts a system line and the next message carries the new name.
+- [ ] Flip CRT scanlines off and on; the lines vanish and return without a restart. Flip Night City ULTRA; the scene remounts in synthwave.
+- [ ] Reset panel arrangement after a drag-swap; panels return to their original slots.
 - [ ] Add a custom image; it appears in the grid and joins the overlay pool.
 - [ ] Remove a custom image; it is gone from the grid and the pool.
 - [ ] Change assets in a box and the featured center asset; the change is reflected and persists after restart.
 
 ## Media tabs
 
-- [ ] Jukebox: click Chillsynth (CH 01) and confirm audio plays and the equalizer animates.
+- [ ] Jukebox: click Chillsynth (CH 01) and confirm audio plays and the equalizer animates. Pick another station and change the volume; after a restart the same station is selected (not playing) at the same volume.
+- [ ] TV: Unmute brings audio up and the button becomes Mute; Mute silences it again.
 - [ ] MONITOR tab: cams load for several presets (New York, ISS live Earth, and at least one other).
 - [ ] TV tab loads a live stream; Unmute brings up audio.
 - [ ] At the minimum window size (1024x640) the COMMS message list is still visible and the emoji strip scrolls sideways instead of wrapping.

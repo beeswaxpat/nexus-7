@@ -15,6 +15,7 @@ import { defaultSettings } from '../../shared/constants';
 import type { AppContext } from '../app-context';
 import type { SceneSettings } from '../../shared/types';
 import { el } from './dom';
+import { SCENES_CHANGED } from './events';
 import { mountGlobe } from '../panels/globe/globe';
 import { mountNightCity } from '../panels/noir/night-city';
 
@@ -168,6 +169,10 @@ export function mountScenes(
     renderSlot(centerHost);
     renderSlot(cornerHost);
   }
+
+  // The Settings modal edits settings.scenes too; it broadcasts after persisting
+  // (ctx.settings is already refreshed), so a full re-render picks it up.
+  window.addEventListener(SCENES_CHANGED, renderAll);
 
   renderAll();
 }

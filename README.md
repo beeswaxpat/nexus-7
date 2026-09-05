@@ -51,7 +51,8 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ### Settings and chaos
 
-- Settings gear in the titlebar: upload your own images (multi-select, auto-downscaled) for the overlay.
+- Settings gear in the titlebar: callsign and private-room passphrase reset, the chaos toggles (banners, HACKED / LFG takeover, scanlines, auto message), scene arrangement and Night City ULTRA, layout resets, and your own overlay images (multi-select, auto-downscaled).
+- Five LEDs in the titlebar show the health of each data source (hover for the last update); a red LED means the panels are showing last-known values.
 - Reactive "chaos": price-driven banners, accent recolor on pumps and dumps, and your uploaded images drifting in as overlays, all contained so they never break the layout.
 - Respects `prefers-reduced-motion`.
 
@@ -108,8 +109,8 @@ Most configuration happens in place on the dashboard:
 
 - Assets: the + button on each asset box opens a search for any coin or ticker; click the featured asset name (or the gold second-slot card) in the command center to re-point it; click a row's market-cap cell to enter how many units you hold.
 - Images: the app ships with no images; add your own to the overlay pool from Settings (multi-select, auto-downscaled). They drift in over the dashboard and appear on big BTC moves.
-- Chat rooms: switch between the built-in PUBLIC room and a PRIVATE room. A private room is just a shared passphrase: everyone who types the same phrase lands in the same encrypted channel.
-- Scenes: hover a scene for its swap / hide / ULTRA controls. Privacy: the eye icon in either asset box blurs every dollar value. Layout: drag a panel's grip to swap it with another, drag the dividers between the left boxes to resize them.
+- Chat rooms: the COMMS header names the room you are in; GO PRIVATE / GO PUBLIC switches. A private room is just a shared passphrase: everyone who types the same phrase lands in the same encrypted channel. Your callsign and a passphrase reset live in Settings.
+- Scenes: hover a scene for its swap / hide / ULTRA controls, or use the SCENES section in Settings. Privacy: the eye icon in either asset box blurs every dollar value. Layout: drag a panel's grip to swap it with another, drag the dividers between the left boxes to resize them.
 
 ### First-run seed (optional)
 

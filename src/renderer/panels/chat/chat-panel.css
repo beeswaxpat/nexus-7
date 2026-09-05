@@ -32,12 +32,23 @@
   text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* room hop button (PUBLIC CHAT <-> PRIVATE CHAT), sits between title and status */
+/* current room label + the hop button, between the title and the status light */
+.chat__room-label {
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--neon-gold);
+  white-space: nowrap;
+}
+.chat__room-label--public {
+  color: var(--text-dim);
+}
 .chat__room {
   font-size: 9px;
   letter-spacing: 0.12em;
   padding: 2px 8px;
-  margin-left: 10px;
+  margin-left: 8px;
   margin-right: auto;
 }
 
