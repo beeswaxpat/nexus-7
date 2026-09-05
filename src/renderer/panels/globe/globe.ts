@@ -1,4 +1,27 @@
 // GLOBE: the interactive Earth centerpiece (replaces the wormhole scene).
+//
+//   - ROUND 15 (Fable): the "awe" pass. A persistent parallax STARFIELD
+//     (./starfield.ts) sits behind every regime and streaks radially while the
+//     zoom moves, so a scroll reads as travel. The Earth regains its dot-matrix
+//     CONTINENTS (day gold / night cyan / terminator blend, limb-darkened) under
+//     the wireframe, plus NIGHT-SIDE CITY LIGHTS (./city-data.ts) that ignite as
+//     cities cross the terminator, a stronger Fresnel atmosphere and a day-side
+//     scatter. A clickable SCALE LADDER on the right (EARTH .. BRANES) shows where
+//     you are and jumps there; a live SCALE readout under the tag counts the
+//     field width in km / AU / LY / MLY / GLY as you pull back. Each regime
+//     boundary fires a SHELL PULSE (an expanding ring) so passing a layer is felt.
+//     Outer regimes: the Moon gets a glow, a motion trail, a range line and the
+//     Lagrange points; the solar system gets the asteroid + Kuiper belts, planet
+//     motion trails, Saturn's ring, corona rays and all eight labels (and the
+//     orbit rings now project with the same yaw-then-pitch transform as the
+//     planets, so drag yaw keeps them on their rings); the Milky Way gets a
+//     globular-cluster halo and a pulsing SOL beacon; the Local Group a field of
+//     distant background galaxies and brighter members; the cosmic web a second
+//     deep layer for parallax and a warmer CMB horizon; the multiverse soap-film
+//     bubble rims with Fresnel highlights and nucleation sparks; the branes a
+//     true 4D tesseract (16 vertices, 32 edges, double rotation, two-stage
+//     perspective). All of it gated by reduced motion where it moves.
+//
 // Canvas 2D, orthographic projection, calm and readable:
 //   - dot-matrix Earth: land as a Fibonacci sphere of ~17000 candidate points
 //     (golden-angle spiral, no latitude banding), kept where they fall on a
@@ -70,6 +93,8 @@ import { el, mount } from '../../core/dom';
 import { formatPrice } from '../../core/format';
 import { findCenterQuote } from '../../core/center';
 import { LAND } from './land-data';
+import { CITIES } from './city-data';
+import { createStarfield } from './starfield';
 import type { SatElement } from '../../../shared/types';
 import type { SatConst, SatState } from '../../core/orbits';
 import { deriveConst, gmstRad, propagate, telemetry } from '../../core/orbits';
@@ -546,6 +571,147 @@ const CHROME_M_TELEM = 'FALSE VACUUM // UNIVERSES MERGING';
 const CHROME_P_TAG = 'DIMENSIONAL PLANES // STACKED BRANES';
 const CHROME_P_TELEM = 'HILBERT MANIFOLD // ORTHOGONAL REALITIES';
 
+// --- ROUND 15: awe pass constants ------------------------------------------
+/** Land dot limb-darkening buckets on view-z (brightness index 0..3). */
+const LAND_BUCKET_Z = [0.22, 0.48, 0.76];
+/** Land dot alpha multiplier (the sprites carry their own alpha ramps). */
+const LAND_ALPHA = 0.92;
+/** City lights: warm amber sprite, size relative to spriteCssDia, twinkle rate. */
+const CITY_RGB: [number, number, number] = [255, 214, 140];
+const CITY_SIZE_MUL = 1.15;
+const CITY_TWINKLE = 2.3;
+/** City lights ignite over this sun-dot band (full at deep night). */
+const CITY_DAWN = 0.1;
+const CITY_DUSK = -0.22;
+/** Day-side atmospheric scatter (warm-white wash on the sunlit limb). */
+const SCATTER_ALPHA = 0.13;
+/** Shell pulse on a regime change: ring expansion time (s) + peak alpha. */
+const SHELL_SEC = 1.1;
+const SHELL_ALPHA = 0.32;
+/** Scale ladder rungs: zoom center per regime (click target) + label. */
+const LADDER: Array<{ z: number; reg: Regime; label: string }> = [
+  { z: 0, reg: 'E', label: 'EARTH' },
+  { z: 1.0, reg: 'C', label: 'LUNA' },
+  { z: 1.65, reg: 'S', label: 'SOL' },
+  { z: 2.5, reg: 'G', label: 'MILKY WAY' },
+  { z: 3.6, reg: 'X', label: 'LOCAL GROUP' },
+  { z: 4.5, reg: 'U', label: 'UNIVERSE' },
+  { z: 5.3, reg: 'M', label: 'MULTIVERSE' },
+  { z: 6.0, reg: 'P', label: 'BRANES' }
+];
+/**
+ * Scale readout anchors: zoom -> log10(field width in meters), piecewise linear.
+ * Earth diameter at z=0, the Moon's orbit at C, ~60 AU at S, the galactic disc
+ * at G, ~10 Mly at X, the observable universe (93 Gly) at U.
+ */
+const SCALE_ANCHORS: Array<[number, number]> = [
+  [0, 7.106], // 12,742 km
+  [0.55, 7.7],
+  [1.0, 8.886], // 769,000 km
+  [1.35, 11.0],
+  [1.65, 12.95], // ~60 AU
+  [2.1, 19.0],
+  [2.5, 20.98], // 100,000 ly
+  [3.1, 22.4],
+  [3.6, 23.0], // 10 Mly
+  [4.15, 25.6],
+  [4.5, 26.945], // 93 Gly
+  [4.95, 27.3]
+];
+const M_PER_AU = 1.495978707e11;
+const M_PER_LY = 9.4607e15;
+/** Moon trail arc length (rad of orbit param) + Lagrange marker ratios. */
+const MOON_TRAIL_RAD = 0.55;
+const L1_RATIO = 0.849;
+const L2_RATIO = 1.168;
+/** Asteroid + Kuiper belts (solar regime), prerendered flat and drawn tilted. */
+const BELT_MAIN_N = 900;
+const BELT_MAIN_A0 = 2.1;
+const BELT_MAIN_A1 = 3.3;
+const BELT_KUIPER_N = 700;
+const BELT_KUIPER_A0 = 38;
+const BELT_KUIPER_A1 = 50;
+/** Planet motion-trail arc (rad) for the inner four and the outer four. */
+const PLANET_TRAIL_INNER = 0.42;
+const PLANET_TRAIL_OUTER = 0.14;
+/** Sun corona rays: count, slow spin (rad/s), pulse rate. */
+const CORONA_RAYS = 11;
+const CORONA_SPIN = 0.045;
+/** Globular-cluster halo around the Milky Way sprite. */
+const GAL_GLOBULAR_N = 60;
+/** Background field of distant galaxies behind the Local Group. */
+const CLUSTER_BG_N = 240;
+/** Cosmic-web deep layer: scale, alpha, rotation offset (rad). */
+const WEB_DEEP_SCALE = 0.62;
+const WEB_DEEP_ALPHA = 0.28;
+const WEB_DEEP_ROT = 0.6;
+/** Multiverse nucleation sparks: pool, cadence (s), life (s), max radius (px). */
+const NUCLEATE_POOL = 3;
+const NUCLEATE_MIN_SEC = 3.5;
+const NUCLEATE_MAX_SEC = 7;
+const NUCLEATE_SEC = 1.5;
+const NUCLEATE_R = 30;
+/** Tesseract: 4D perspective distance, 3D perspective distance, size vs half. */
+const TESS_D4 = 2.6;
+const TESS_D3 = 3.4;
+const TESS_SIZE = 0.24;
+
+/** 16 hypercube vertices (+/-1)^4 and the 32 edges (pairs differing in one bit). */
+const TESS_V = new Float32Array(16 * 4);
+const TESS_E: number[] = [];
+for (let v = 0; v < 16; v++) {
+  TESS_V[v * 4] = v & 1 ? 1 : -1;
+  TESS_V[v * 4 + 1] = v & 2 ? 1 : -1;
+  TESS_V[v * 4 + 2] = v & 4 ? 1 : -1;
+  TESS_V[v * 4 + 3] = v & 8 ? 1 : -1;
+  for (let bit = 0; bit < 4; bit++) {
+    const u = v ^ (1 << bit);
+    if (u > v) TESS_E.push(v, u);
+  }
+}
+
+/** City unit vectors (earth-fixed frame, same axes as the dot field) + weights. */
+const CITY_COUNT = CITIES.length;
+const CITY_V = new Float32Array(CITY_COUNT * 3);
+const CITY_W = new Float32Array(CITY_COUNT);
+const CITY_PH = new Float32Array(CITY_COUNT);
+for (let i = 0; i < CITY_COUNT; i++) {
+  const lonR = CITIES[i][0] * D2R;
+  const latR = CITIES[i][1] * D2R;
+  CITY_V[i * 3] = Math.cos(latR) * Math.cos(lonR);
+  CITY_V[i * 3 + 1] = Math.sin(latR);
+  CITY_V[i * 3 + 2] = Math.cos(latR) * Math.sin(lonR);
+  CITY_W[i] = CITIES[i][2];
+  CITY_PH[i] = (i * 2.399) % TAU; // golden-angle phases so twinkles never sync
+}
+
+/** Format a field width in meters for the SCALE readout (3 significant digits). */
+function formatScale(meters: number): string {
+  const sig = (v: number): string => {
+    if (v >= 100) return Math.round(v).toLocaleString('en-US');
+    if (v >= 10) return v.toFixed(1);
+    return v.toFixed(2);
+  };
+  if (meters < 1e10) return sig(meters / 1000) + ' KM';
+  if (meters < 1e15) return sig(meters / M_PER_AU) + ' AU';
+  if (meters < 1e22) return sig(meters / M_PER_LY) + ' LY';
+  if (meters < 1e25) return sig(meters / (M_PER_LY * 1e6)) + ' MLY';
+  return sig(meters / (M_PER_LY * 1e9)) + ' GLY';
+}
+
+/** Piecewise-linear log10(meters) for a zoom value (clamped to the anchors). */
+function scaleLog10(z: number): number {
+  const A = SCALE_ANCHORS;
+  if (z <= A[0][0]) return A[0][1];
+  for (let i = 1; i < A.length; i++) {
+    if (z <= A[i][0]) {
+      const t = (z - A[i - 1][0]) / (A[i][0] - A[i - 1][0]);
+      return A[i - 1][1] + (A[i][1] - A[i - 1][1]) * t;
+    }
+  }
+  return A[A.length - 1][1];
+}
+
 /**
  * JPL low-precision planetary elements (J2000 epoch + per-century rates).
  * Columns: a (AU), e, I (deg), L (deg), wbar (deg), Omega (deg); each with a rate.
@@ -669,7 +835,28 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     el('span', { class: 'globe__tag-dot', 'aria-hidden': 'true' }),
     tagLabel
   );
-  const host = el('div', { class: 'globe' }, canvas, tag);
+  // ROUND 15: live scale readout under the tag (field width, counts as you zoom)
+  const scaleLabel = el('span', { class: 'globe__scale-label', text: 'SCALE // 12,742 KM' });
+  const scaleLine = el('div', { class: 'globe__scale', 'aria-hidden': 'true' }, scaleLabel);
+  const host = el('div', { class: 'globe' }, canvas, tag, scaleLine);
+
+  // ROUND 15: the scale ladder (right edge). One rung per regime; the active
+  // rung glows, a cursor slides with the eased zoom, and a click jumps there.
+  const ladderRungs: HTMLElement[] = [];
+  const ladderCursor = el('span', { class: 'globe__ladder-cursor', 'aria-hidden': 'true' });
+  const ladder = el('div', { class: 'globe__ladder', role: 'group', 'aria-label': 'Zoom scale' });
+  for (const rung of LADDER) {
+    const b = el('button', {
+      class: 'globe__rung',
+      type: 'button',
+      title: `Jump to ${rung.label}`,
+      'data-reg': rung.reg
+    }, el('span', { class: 'globe__rung-dot' }), el('span', { class: 'globe__rung-label', text: rung.label }));
+    ladderRungs.push(b);
+    ladder.append(b);
+  }
+  ladder.append(ladderCursor);
+  host.append(ladder);
 
   // --- B3: yacht viewport chrome (pointer-events:none overlay DOM) ----------
   // A bezel hull ring + interior vignette, a swept glass streak, and a lip strip
@@ -785,6 +972,35 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
   let aM = 0; // multiverse band (merging universe bubbles)
   let aP = 0; // dimensional-planes band (stacked branes) -- terminal regime
   let Rearth = R; // receded Earth radius for the dot/hub/arc/sun blocks
+
+  // --- ROUND 15 state --------------------------------------------------------
+  const stars = createStarfield();
+  let zoomVel = 0; // smoothed d(zoom)/dt, drives the star streaks
+  let prevZoomForVel = 0;
+  let shellAt = -10; // scene seconds of the last regime-boundary shell pulse
+  let shellRegime: Regime = 'E';
+  let ladderRegime: Regime | null = null; // last regime the ladder highlighted
+  let ladderCursorPct = -1; // last cursor position written (percent, rounded)
+  let scaleTick = 0; // frames since the last readout write
+  let scaleText = '';
+  let moonRangeText = '384,400 KM';
+  // solar belts: prerendered flat (unsquashed) on first S entry; drawn under the
+  // same yaw-then-pitch transform as the rings + planets.
+  const beltCv = document.createElement('canvas');
+  let beltPx = 0;
+  let beltBuilt = false;
+  // multiverse nucleation sparks (pool): screen x/y, born, on
+  const nucOn = new Uint8Array(NUCLEATE_POOL);
+  const nucX = new Float32Array(NUCLEATE_POOL);
+  const nucY = new Float32Array(NUCLEATE_POOL);
+  const nucBorn = new Float32Array(NUCLEATE_POOL);
+  let nextNucleateAt = 0;
+  // tesseract projection scratch (16 vertices x,y + depth), hoisted
+  const tessX = new Float32Array(16);
+  const tessY = new Float32Array(16);
+  const tessZ = new Float32Array(16);
+  // city light sprites (two sizes: small / large), rebuilt on resize
+  let citySprites: Sprite[] = [];
 
   // --- B5 cache: Moon vector + range, recomputed at 1 Hz in tickChrome -------
   let moonX = 0;
@@ -974,6 +1190,8 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     termSprites = TERM_STYLES.map((row) => row.map((s) => makeSprite(s)));
     dimSprite = makeSprite(DIM_STYLE);
     planetSprites = PLANETS.map((p) => makePlanetSprite(p.color, p.size));
+    // city lights: a warm core with a wider halo than the land dots (two sizes)
+    citySprites = [0.7, 1.0].map((a) => makeSprite(rgba(CITY_RGB[0], CITY_RGB[1], CITY_RGB[2], a)));
   }
 
   function rebuildSunSprite(): void {
@@ -1014,15 +1232,23 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     const rimMul = MOOD_RIM[moodBand];
     const rimColor = moodBand === 0 ? DUMP_RIM : accent;
     sg.globalCompositeOperation = 'lighter';
+    // ROUND 15: Fresnel atmosphere. An inner limb brightening (the light that
+    // wraps the edge of a lit sphere), a bright thin shell just outside the
+    // limb, and a long soft outer glow that fades into the sky.
+    const span = R + pad - R * 0.84;
+    const at = (r: number): number => Math.max(0, Math.min(1, (r - R * 0.84) / span));
     const rim = sg.createRadialGradient(c, c, R * 0.84, c, c, R + pad);
     rim.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    rim.addColorStop(0.42, withAlpha(rimColor, 0.14 * rimMul));
-    rim.addColorStop(0.56, withAlpha(rimColor, 0.08 * rimMul));
+    rim.addColorStop(at(R * 0.96), withAlpha(rimColor, 0.1 * rimMul));
+    rim.addColorStop(at(R), withAlpha(rimColor, 0.3 * rimMul));
+    rim.addColorStop(at(R * 1.025), withAlpha(rimColor, 0.22 * rimMul));
+    rim.addColorStop(at(R * 1.08), withAlpha(rimColor, 0.09 * rimMul));
+    rim.addColorStop(at(R * 1.2), withAlpha(rimColor, 0.035 * rimMul));
     rim.addColorStop(1, 'rgba(0, 0, 0, 0)');
     sg.fillStyle = rim;
     sg.fillRect(0, 0, sphereSize, sphereSize);
     // thin limb line
-    sg.strokeStyle = withAlpha(accent, 0.3);
+    sg.strokeStyle = withAlpha(accent, 0.34);
     sg.lineWidth = 1;
     sg.beginPath();
     sg.arc(c, c, R + 0.5, 0, TAU);
@@ -1095,6 +1321,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     }
 
     // Telemetry lip line, per regime, written only on change (RZ4).
+    moonRangeText = Math.round(moonRangeKm).toLocaleString('en-US') + ' KM';
     if (reg === 'C') {
       setTelem('LUNA // RANGE ' + Math.round(moonRangeKm) + ' KM');
     } else if (reg === 'S') {
@@ -1137,6 +1364,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     webBuilt = false;
     multiBuilt = false;
     planesBuilt = false;
+    beltBuilt = false;
   }
 
   // --- real sun position (allocation-free; called once per frame) ----------
@@ -1705,6 +1933,21 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       zoom += (zoomTarget - zoom) * a;
       if (Math.abs(zoomTarget - zoom) < 1e-4) zoom = zoomTarget;
     }
+    // ROUND 15: smoothed zoom velocity (star streaks) + regime-boundary shell.
+    {
+      const raw = dt > 0 ? (zoom - prevZoomForVel) / dt : 0;
+      prevZoomForVel = zoom;
+      const k = 1 - Math.exp(-dt / 0.08);
+      zoomVel += (raw - zoomVel) * k;
+      if (Math.abs(zoomVel) < 0.005) zoomVel = 0;
+      else if (zoomVel > 7) zoomVel = 7; // a trackpad fling still reads as a flow, not a collapse
+      else if (zoomVel < -7) zoomVel = -7;
+      const reg = regime();
+      if (reg !== shellRegime) {
+        shellRegime = reg;
+        if (!reducedMotion) shellAt = clock;
+      }
+    }
 
     // --- B1 satellite sampling: 250 ms snapshots + earth-fixed trail writes ---
     // H5(b): the throttle + interpolation phase ride a WALL-CLOCK timestamp
@@ -1783,6 +2026,13 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     aP = smoothstep(5.55, 5.85, z);
     Rearth = z <= 1 ? R * (1 - 0.84 * smoothstep(0, 1, z)) : R * 0.16;
 
+    // ROUND 15: the star tunnel behind everything. Full sky through the
+    // observable universe, gone by the multiverse (there is no "sky" outside).
+    {
+      const skyA = 1 - smoothstep(4.75, 5.3, z);
+      stars.draw(g, w, h, cx, cy, lastFrameDt, zoomVel, clock, skyA, reducedMotion);
+    }
+
     // RZ7: refresh the galaxy SOL marker screen position from the stored
     // canvas-relative coords + the current galaxy rotation BEFORE drawSolar runs,
     // so the S->G sun handoff never reads a one-frame-stale value.
@@ -1816,6 +2066,9 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     const svz = ssz;
 
     g.globalCompositeOperation = 'lighter';
+
+    // --- ROUND 15: day-side scatter, continents, city lights -----------------
+    if (aE >= 0.02) drawEarthSurface(cosT, sinT, cosP, sinP, svx, svy);
 
     // --- wireframe globe (holographic meridian/parallel grid, NO land) -------
     // The Earth reads as a clean cool-cyan wireframe sphere: the precomputed
@@ -2052,8 +2305,164 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     // --- B2 holographic overlay pass (cone + wash + HUD rings + sats + scan) --
     drawHolo(cosT, sinT, cosP, sinP);
 
+    // --- ROUND 15: shell pulse on a regime boundary + the DOM scale chrome ---
+    drawShell();
+    updateScaleChrome();
+
     g.globalCompositeOperation = 'source-over';
     g.globalAlpha = 1;
+  }
+
+  // --- ROUND 15: Earth surface (scatter + land dots + city lights) -----------
+  // Drawn between the ocean sphere and the wireframe. The dot field is the
+  // module-level Fibonacci land set (DOTS); each front-facing dot picks a
+  // prebuilt sprite by sun angle (day / night / 4 terminator mixes) and a
+  // brightness bucket by view-z (limb darkening), then one drawImage. City
+  // lights ignite as their sun-dot crosses the dusk band and twinkle softly.
+  function drawEarthSurface(
+    cosT: number,
+    sinT: number,
+    cosP: number,
+    sinP: number,
+    svx: number,
+    svy: number
+  ): void {
+    if (!dimSprite || daySprites.length === 0) return;
+    const rs = Rearth / R;
+    // 1) day-side scatter: warm-white wash from the sunlit limb, clipped to the disc
+    {
+      const len = Math.hypot(svx, svy);
+      if (len > 0.05) {
+        const ux = svx / len;
+        const uy = -svy / len;
+        g.save();
+        g.beginPath();
+        g.arc(cx, cy, Rearth, 0, TAU);
+        g.clip();
+        const grad = g.createLinearGradient(
+          cx + ux * Rearth,
+          cy + uy * Rearth,
+          cx - ux * Rearth * 0.3,
+          cy - uy * Rearth * 0.3
+        );
+        // tilt the wash toward the sun's elevation: a sun behind the globe barely lights the limb
+        const lit = Math.max(0, Math.min(1, 0.55 + ssz * 0.6));
+        grad.addColorStop(0, rgba(255, 236, 200, SCATTER_ALPHA * lit * aE));
+        grad.addColorStop(0.45, rgba(255, 220, 170, SCATTER_ALPHA * 0.35 * lit * aE));
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        g.fillStyle = grad;
+        g.fillRect(cx - Rearth, cy - Rearth, Rearth * 2, Rearth * 2);
+        g.restore();
+        g.globalCompositeOperation = 'lighter';
+      }
+    }
+    // 2) continents: the dot field, front hemisphere only
+    {
+      const f = DOTS;
+      const sz = spriteCssDia * rs;
+      const half = sz * 0.5;
+      g.globalAlpha = LAND_ALPHA * aE;
+      for (let i = 0; i < f.count; i++) {
+        const x = f.x[i];
+        const y = f.y[i];
+        const zz = f.z[i];
+        const x1 = x * cosT + zz * sinT;
+        const z1 = -x * sinT + zz * cosT;
+        const z2 = y * sinP + z1 * cosP;
+        if (z2 <= 0.01) continue;
+        const y2 = y * cosP - z1 * sinP;
+        const bucket = z2 > LAND_BUCKET_Z[2] ? 3 : z2 > LAND_BUCKET_Z[1] ? 2 : z2 > LAND_BUCKET_Z[0] ? 1 : 0;
+        let sprite: Sprite;
+        if (f.dim[i]) sprite = dimSprite;
+        else {
+          const d = x * sunX + y * sunY + zz * sunZ;
+          if (d > TERM_BAND) sprite = daySprites[bucket];
+          else if (d < -TERM_BAND) sprite = nightSprites[bucket];
+          else {
+            let mix = ((d + TERM_BAND) / (2 * TERM_BAND)) * 4;
+            if (mix < 0) mix = 0;
+            else if (mix > 3.999) mix = 3.999;
+            sprite = termSprites[mix | 0][bucket];
+          }
+        }
+        g.drawImage(sprite, cx + x1 * Rearth - half, cy - y2 * Rearth - half, sz, sz);
+      }
+    }
+    // 3) city lights on the night side
+    if (citySprites.length === 2) {
+      const base = spriteCssDia * CITY_SIZE_MUL * rs;
+      for (let i = 0; i < CITY_COUNT; i++) {
+        const x = CITY_V[i * 3];
+        const y = CITY_V[i * 3 + 1];
+        const zz = CITY_V[i * 3 + 2];
+        const d = x * sunX + y * sunY + zz * sunZ;
+        if (d > CITY_DAWN) continue; // daylight: invisible
+        const x1 = x * cosT + zz * sinT;
+        const z1 = -x * sinT + zz * cosT;
+        const z2 = y * sinP + z1 * cosP;
+        if (z2 <= 0.03) continue;
+        const y2 = y * cosP - z1 * sinP;
+        const wgt = CITY_W[i];
+        const night = 1 - smoothstep(CITY_DUSK, CITY_DAWN, d); // 1 deep night
+        const tw = reducedMotion ? 0.85 : 0.78 + 0.22 * Math.sin(clock * CITY_TWINKLE + CITY_PH[i]);
+        const limb = 0.45 + 0.55 * Math.min(1, z2 * 1.4);
+        const a = night * tw * limb * (0.45 + 0.55 * wgt) * aE;
+        if (a < 0.02) continue;
+        const sz = base * (0.8 + 0.9 * wgt);
+        g.globalAlpha = a;
+        g.drawImage(wgt > 0.55 ? citySprites[1] : citySprites[0], cx + x1 * Rearth - sz * 0.5, cy - y2 * Rearth - sz * 0.5, sz, sz);
+      }
+    }
+    g.globalAlpha = 1;
+  }
+
+  // --- ROUND 15: shell pulse (expanding ring on a regime boundary) -----------
+  function drawShell(): void {
+    const age = clock - shellAt;
+    if (age < 0 || age >= SHELL_SEC) return;
+    const k = age / SHELL_SEC;
+    const ease = 1 - (1 - k) * (1 - k);
+    const rMax = Math.hypot(w, h) * 0.55;
+    const r = 4 + ease * rMax;
+    const a = SHELL_ALPHA * (1 - k) * (1 - k);
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = HUD_STROKE;
+    g.lineWidth = 1.6;
+    g.globalAlpha = a;
+    g.beginPath();
+    g.arc(cx, cy, r, 0, TAU);
+    g.stroke();
+    g.lineWidth = 0.8;
+    g.globalAlpha = a * 0.55;
+    g.beginPath();
+    g.arc(cx, cy, r * 0.72, 0, TAU);
+    g.stroke();
+    g.globalAlpha = 1;
+  }
+
+  // --- ROUND 15: ladder + scale readout (DOM, written only on change) --------
+  function updateScaleChrome(): void {
+    // active rung + cursor: cheap, ~10 Hz is plenty
+    if (++scaleTick < 6) return;
+    scaleTick = 0;
+    const reg = regime();
+    if (reg !== ladderRegime) {
+      ladderRegime = reg;
+      for (const b of ladderRungs) b.classList.toggle('globe__rung--on', b.dataset.reg === reg);
+    }
+    const pct = Math.round((zoom / ZOOM_MAX) * 1000) / 10;
+    if (pct !== ladderCursorPct) {
+      ladderCursorPct = pct;
+      ladderCursor.style.top = pct + '%';
+    }
+    let text: string;
+    if (zoom >= 5.55) text = 'SCALE // OUTSIDE SPACETIME';
+    else if (zoom >= 4.95) text = 'SCALE // BEYOND THE HORIZON';
+    else text = 'SCALE // ' + formatScale(Math.pow(10, scaleLog10(zoom)));
+    if (text !== scaleText) {
+      scaleText = text;
+      scaleLabel.textContent = text;
+    }
   }
 
   // --- B2: the holographic overlay pass -------------------------------------
@@ -2573,8 +2982,99 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       const mpx = cx + x1 * moonRangeKm * KM_TO_PX2;
       const mpy = cy - y2 * moonRangeKm * KM_TO_PX2;
       const mr = Math.max(2.5, R * 0.05);
-      // lit disc
       g.globalCompositeOperation = 'lighter';
+
+      // ROUND 15: motion trail behind the Moon along its (tilt-flattened) ring.
+      // Prograde velocity in the globe frame is north x r = (mz, 0, -mx); project
+      // it to find which way the ellipse parameter runs, then fade an arc behind.
+      let moonTx = 1; // prograde screen tangent (also picks L4 vs L5 below)
+      let moonTy = 0;
+      {
+        const ry = CIS_RING_PX * Math.cos(tilt);
+        const vx = moonZ;
+        const vz = -moonX;
+        const vx1 = vx * cosT + vz * sinT;
+        const vz1 = -vx * sinT + vz * cosT;
+        const vy2 = -vz1 * sinP; // vy = 0
+        const tx = vx1; // screen tangent (x right, y down => -vy2)
+        const ty = -vy2;
+        moonTx = tx;
+        moonTy = ty;
+        const t0 = Math.atan2((mpy - cy) / Math.max(1e-3, ry), (mpx - cx) / CIS_RING_PX);
+        // d/dt of (ring cos t, ry sin t) = (-ring sin t, ry cos t)
+        const fwd = -CIS_RING_PX * Math.sin(t0) * tx + ry * Math.cos(t0) * ty > 0;
+        const a0 = fwd ? t0 - MOON_TRAIL_RAD : t0;
+        const a1 = fwd ? t0 : t0 + MOON_TRAIL_RAD;
+        const steps = 10;
+        g.lineWidth = 1.4;
+        g.strokeStyle = 'rgba(225,230,245,1)';
+        for (let s = 0; s < steps; s++) {
+          const u0 = s / steps;
+          const u1 = (s + 1) / steps;
+          const fade = fwd ? u0 : 1 - u1; // brightest at the Moon
+          g.globalAlpha = 0.35 * fade * fade * aC;
+          g.beginPath();
+          g.ellipse(cx, cy, CIS_RING_PX, ry, 0, a0 + (a1 - a0) * u0, a0 + (a1 - a0) * u1);
+          g.stroke();
+        }
+        g.globalAlpha = 1;
+      }
+
+      // ROUND 15: soft moonglow + a faint Earth-Moon range line with the live km
+      {
+        const glow = g.createRadialGradient(mpx, mpy, mr * 0.6, mpx, mpy, mr * 4.2);
+        glow.addColorStop(0, rgba(220, 230, 255, 0.28 * aC));
+        glow.addColorStop(0.4, rgba(200, 220, 255, 0.08 * aC));
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = glow;
+        g.beginPath();
+        g.arc(mpx, mpy, mr * 4.2, 0, TAU);
+        g.fill();
+        g.lineWidth = 1;
+        g.strokeStyle = HUD_STROKE;
+        g.globalAlpha = 0.14 * aC;
+        g.beginPath();
+        g.moveTo(cx, cy);
+        g.lineTo(mpx, mpy);
+        g.stroke();
+        // Lagrange points: L1 / L2 on the Earth-Moon line, L4 / L5 60 deg ahead/behind
+        const dxm = mpx - cx;
+        const dym = mpy - cy;
+        const mark = (x: number, y: number, label: string): void => {
+          g.globalAlpha = 0.5 * aC;
+          g.beginPath();
+          g.moveTo(x - 3, y);
+          g.lineTo(x + 3, y);
+          g.moveTo(x, y - 3);
+          g.lineTo(x, y + 3);
+          g.stroke();
+          if (aC > 0.85) {
+            g.globalCompositeOperation = 'source-over';
+            g.globalAlpha = (aC - 0.85) / 0.15;
+            g.font = HOLO_LABEL_FONT;
+            g.textBaseline = 'alphabetic';
+            g.fillStyle = '#9fd8ff';
+            g.fillText(label, x + 5, y - 4);
+            g.globalCompositeOperation = 'lighter';
+          }
+        };
+        mark(cx + dxm * L1_RATIO, cy + dym * L1_RATIO, 'L1');
+        mark(cx + dxm * L2_RATIO, cy + dym * L2_RATIO, 'L2');
+        const c60 = Math.cos(Math.PI / 3);
+        const s60 = Math.sin(Math.PI / 3);
+        // rotate the Earth->Moon vector +/-60 deg; the one leaning along the
+        // prograde tangent is ahead (L4), the other trails (L5)
+        const ax = dxm * c60 - dym * s60;
+        const ay = dxm * s60 + dym * c60;
+        const bx = dxm * c60 + dym * s60;
+        const by = -dxm * s60 + dym * c60;
+        const aAhead = ax * moonTx + ay * moonTy > bx * moonTx + by * moonTy;
+        mark(cx + ax, cy + ay, aAhead ? 'L4' : 'L5');
+        mark(cx + bx, cy + by, aAhead ? 'L5' : 'L4');
+        g.globalAlpha = 1;
+      }
+
+      // lit disc
       g.globalAlpha = aC;
       g.fillStyle = 'rgba(225,230,245,1)';
       g.beginPath();
@@ -2600,6 +3100,18 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       g.fill();
       g.restore();
       g.globalAlpha = 1;
+      // ROUND 15: LUNA label + live range, fading in with the band
+      if (aC > 0.8) {
+        g.globalCompositeOperation = 'source-over';
+        g.globalAlpha = (aC - 0.8) / 0.2;
+        g.font = HOLO_LABEL_FONT;
+        g.textBaseline = 'alphabetic';
+        g.fillStyle = '#e6ecff';
+        g.fillText('LUNA', mpx + mr + 6, mpy - 2);
+        g.fillStyle = '#9fd8ff';
+        g.fillText(moonRangeText, mpx + mr + 6, mpy + 9);
+        g.globalAlpha = 1;
+      }
       g.globalCompositeOperation = 'lighter';
     }
     g.globalCompositeOperation = 'source-over';
@@ -2637,19 +3149,78 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       g.arc(sunX2, sunY2, Math.max(2, R * 0.02) * (0.25 + 0.75 * sShrink), 0, TAU);
       g.fill();
       g.globalAlpha = 1;
+      // ROUND 15: corona rays, a slow-turning fan of faint spokes that breathe
+      {
+        const spin = reducedMotion ? 0 : clock * CORONA_SPIN;
+        const rayA = 0.07 * aS * sShrink;
+        if (rayA > 0.003) {
+          g.fillStyle = 'rgba(255, 220, 150, 1)';
+          g.globalAlpha = rayA;
+          g.beginPath();
+          for (let i = 0; i < CORONA_RAYS; i++) {
+            const ang = spin + (i * TAU) / CORONA_RAYS;
+            const pulse = reducedMotion ? 0.85 : 0.7 + 0.3 * Math.sin(clock * 0.9 + i * 1.3);
+            const len = R * (0.55 + 0.4 * pulse) * (0.3 + 0.7 * sShrink);
+            const hw = R * 0.02;
+            const ca = Math.cos(ang);
+            const sa = Math.sin(ang);
+            g.moveTo(sunX2 - sa * hw, sunY2 + ca * hw);
+            g.lineTo(sunX2 + sa * hw, sunY2 - ca * hw);
+            g.lineTo(sunX2 + ca * len, sunY2 + sa * len);
+            g.closePath();
+          }
+          g.fill();
+          g.globalAlpha = 1;
+        }
+      }
     }
 
-    // orbit rings (sqrt-compressed a), tilted ellipses ------------------------
-    g.lineWidth = 1;
-    g.strokeStyle = HUD_STROKE;
-    g.globalAlpha = 0.1 * aS;
-    for (let p = 0; p < PLANETS.length; p++) {
-      const srOrb = K * Math.sqrt(PLANETS[p].a);
-      g.beginPath();
-      g.ellipse(cx, cy, srOrb, srOrb * Math.cos(SOLAR_TILT), eclipticAz, 0, TAU);
-      g.stroke();
+    // ROUND 15: belts + orbit rings + planet motion trails, all under ONE
+    // yaw-then-pitch transform (translate, flip+squash y by cos tilt, rotate by
+    // the ecliptic yaw) that matches the planet projection exactly, so a drag
+    // yaw keeps every planet on its ring. Radial distance stays sqrt-compressed.
+    {
+      if (!beltBuilt) buildBelts(K);
+      g.save();
+      g.translate(cx, cy);
+      g.scale(1, -cp);
+      g.rotate(eclipticAz);
+      // belts (prerendered flat, drawn scaled to the live K)
+      if (beltBuilt && beltPx > 0) {
+        const beltCss = K * Math.sqrt(BELT_KUIPER_A1) * 2.08;
+        g.globalAlpha = 0.9 * aS;
+        g.drawImage(beltCv, -beltCss / 2, -beltCss / 2, beltCss, beltCss);
+      }
+      // rings
+      g.lineWidth = 1;
+      g.strokeStyle = HUD_STROKE;
+      for (let p = 0; p < PLANETS.length; p++) {
+        const srOrb = K * Math.sqrt(PLANETS[p].a);
+        g.globalAlpha = (p === 2 ? 0.24 : 0.13) * aS;
+        g.beginPath();
+        g.arc(0, 0, srOrb, 0, TAU);
+        g.stroke();
+      }
+      // motion trails: a fading arc behind each planet (prograde = increasing phi)
+      g.lineWidth = 1.6;
+      for (let p = 0; p < PLANETS.length; p++) {
+        const srOrb = K * Math.sqrt(PLANETS[p].a);
+        const phi = Math.atan2(planetY[p], planetX[p]);
+        const len = p < 4 ? PLANET_TRAIL_INNER : PLANET_TRAIL_OUTER;
+        g.strokeStyle = PLANETS[p].color;
+        const segs = 6;
+        for (let s = 0; s < segs; s++) {
+          const u0 = s / segs;
+          const u1 = (s + 1) / segs;
+          g.globalAlpha = 0.55 * u1 * u1 * aS;
+          g.beginPath();
+          g.arc(0, 0, srOrb, phi - len * (1 - u0), phi - len * (1 - u1));
+          g.stroke();
+        }
+      }
+      g.restore();
+      g.globalAlpha = 1;
     }
-    g.globalAlpha = 1;
 
     // project planets, depth-order by view z (insertion sort on indices) ------
     for (let p = 0; p < PLANETS.length; p++) solarOrder[p] = p;
@@ -2694,17 +3265,24 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       const sz = PLANETS[p].size * 2.4;
       g.globalAlpha = aS;
       g.drawImage(spr, solarSX[p] - sz / 2, solarSY[p] - sz / 2, sz, sz);
+      // ROUND 15: Saturn's ring
+      if (p === 5) {
+        g.lineWidth = 1.3;
+        g.strokeStyle = PLANETS[p].color;
+        g.globalAlpha = 0.6 * aS;
+        g.beginPath();
+        g.ellipse(solarSX[p], solarSY[p], PLANETS[p].size * 1.7, PLANETS[p].size * 0.55, -0.35, 0, TAU);
+        g.stroke();
+      }
     }
     g.globalAlpha = 1;
 
-    // labels: inner 4 always, outer 4 only when deep-zoomed ------------------
+    // labels: all eight, fading in with the band ------------------------------
     g.globalCompositeOperation = 'source-over';
     g.font = HOLO_LABEL_FONT;
     g.textBaseline = 'alphabetic';
     for (let p = 0; p < PLANETS.length; p++) {
-      const inner = p < 4;
-      if (!inner && zoom <= 1.75) continue;
-      g.globalAlpha = 0.5 * aS;
+      g.globalAlpha = 0.6 * aS;
       g.fillStyle = PLANETS[p].color;
       g.fillText(PLANETS[p].name, solarSX[p] + PLANETS[p].size, solarSY[p] - PLANETS[p].size);
     }
@@ -2731,6 +3309,49 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       }
     }
     g.globalCompositeOperation = 'source-over';
+  }
+
+  // --- ROUND 15: asteroid + Kuiper belts (prerendered flat, seeded) ---------
+  // Baked unsquashed and unrotated; drawSolar draws the sprite under the same
+  // yaw/pitch transform as the rings so the belts sit in the ecliptic plane.
+  // Rebuilt on resize (beltBuilt is cleared there) since it scales with R.
+  function buildBelts(K: number): void {
+    const outer = K * Math.sqrt(BELT_KUIPER_A1) * 1.04;
+    beltPx = Math.round(Math.min(outer * 2 * dpr, 1400));
+    if (beltPx < 4) beltPx = 4;
+    beltCv.width = beltPx;
+    beltCv.height = beltPx;
+    const sg = beltCv.getContext('2d');
+    if (!sg) return;
+    sg.clearRect(0, 0, beltPx, beltPx);
+    sg.globalCompositeOperation = 'lighter';
+    const C = beltPx / 2;
+    const scale = beltPx / (outer * 2); // css px -> bake px
+    const rng = makeRng(0xa57e201d);
+    const dot = Math.max(0.6, 0.9 * scale * (R / 120));
+    // main belt: a gentle inner-heavy falloff with a faint Kirkwood thinning
+    sg.fillStyle = 'rgba(170, 200, 225, 1)';
+    for (let i = 0; i < BELT_MAIN_N; i++) {
+      let a = BELT_MAIN_A0 + Math.pow(rng(), 1.25) * (BELT_MAIN_A1 - BELT_MAIN_A0);
+      if (Math.abs(a - 2.5) < 0.04 || Math.abs(a - 2.82) < 0.03) a += 0.06; // gaps
+      const r = K * Math.sqrt(a) * scale;
+      const th = rng() * TAU;
+      sg.globalAlpha = 0.1 + rng() * 0.2;
+      const d = dot * (0.5 + rng() * 0.6);
+      sg.fillRect(C + Math.cos(th) * r - d / 2, C + Math.sin(th) * r - d / 2, d, d);
+    }
+    // Kuiper belt: sparser, cooler, fainter
+    sg.fillStyle = 'rgba(160, 200, 255, 1)';
+    for (let i = 0; i < BELT_KUIPER_N; i++) {
+      const a = BELT_KUIPER_A0 + rng() * (BELT_KUIPER_A1 - BELT_KUIPER_A0);
+      const r = K * Math.sqrt(a) * scale;
+      const th = rng() * TAU;
+      sg.globalAlpha = 0.08 + rng() * 0.16;
+      const d = dot * (0.5 + rng() * 0.6);
+      sg.fillRect(C + Math.cos(th) * r - d / 2, C + Math.sin(th) * r - d / 2, d, d);
+    }
+    sg.globalAlpha = 1;
+    beltBuilt = true;
   }
 
   // ======================================================================
@@ -2920,6 +3541,19 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       }
       sg.globalCompositeOperation = 'lighter';
     }
+    // ROUND 15: globular-cluster halo, a rounder spherical scatter of small
+    // warm-white puffs around the disc (old stars above and below the plane).
+    {
+      sg.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < GAL_GLOBULAR_N; k++) {
+        const rr = Rd * (0.28 + Math.pow(rng(), 0.7) * 0.82);
+        const th = rng() * TAU;
+        const ph = Math.acos(2 * rng() - 1); // uniform on the sphere
+        const x = R0 + rr * Math.cos(th) * Math.sin(ph);
+        const y = R0 + rr * (Math.sin(th) * Math.sin(ph) * squash + Math.cos(ph) * 0.55);
+        splat(x, y, dot * (1.1 + rng() * 1.2), 255, 236, 205, 0.12 + rng() * 0.16);
+      }
+    }
     // SOL marker: real location 26,700 / 50,000 = 0.534 of the disc radius, on a
     // minor-arm spur (the Orion Spur). Stored canvas-center-relative; drawn live.
     {
@@ -2957,12 +3591,27 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     g.restore();
     g.globalAlpha = 1;
     // SOL marker (galaxySunScreenX/Y were refreshed at the top of draw(), RZ7).
+    // ROUND 15: a pulsing beacon ring + a leader line to the label.
     g.globalCompositeOperation = 'lighter';
     g.lineWidth = 1;
-    g.globalAlpha = 0.7 * aG;
+    const beat = reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(clock * 2.2);
+    g.globalAlpha = 0.75 * aG;
     g.strokeStyle = '#6cc5ff';
     g.beginPath();
-    g.arc(galaxySunScreenX, galaxySunScreenY, 7, 0, TAU);
+    g.arc(galaxySunScreenX, galaxySunScreenY, 5, 0, TAU);
+    g.stroke();
+    g.globalAlpha = 0.45 * (1 - beat) * aG;
+    g.beginPath();
+    g.arc(galaxySunScreenX, galaxySunScreenY, 6 + 9 * beat, 0, TAU);
+    g.stroke();
+    g.fillStyle = '#ffffff';
+    g.globalAlpha = 0.9 * aG;
+    g.fillRect(galaxySunScreenX - 1, galaxySunScreenY - 1, 2, 2);
+    g.globalAlpha = 0.5 * aG;
+    g.beginPath();
+    g.moveTo(galaxySunScreenX + 6, galaxySunScreenY - 6);
+    g.lineTo(galaxySunScreenX + 16, galaxySunScreenY - 16);
+    g.lineTo(galaxySunScreenX + 30, galaxySunScreenY - 16);
     g.stroke();
     g.globalAlpha = 1;
     if (aG > 0.9) {
@@ -2971,7 +3620,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       g.font = HOLO_LABEL_FONT;
       g.textBaseline = 'alphabetic';
       g.fillStyle = '#bfe6ff';
-      g.fillText('SOL', galaxySunScreenX + 10, galaxySunScreenY - 8);
+      g.fillText('SOL // YOU ARE HERE', galaxySunScreenX + 33, galaxySunScreenY - 13);
       g.globalAlpha = 1;
       g.globalCompositeOperation = 'lighter';
     }
@@ -3002,7 +3651,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     sg.globalCompositeOperation = 'lighter';
     const C = clusterPx / 2;
     const span = clusterPx * 0.62; // MW <-> M31 separation (2.5 Mly)
-    const galDia = clusterPx * 0.16;
+    const galDia = clusterPx * 0.2;
     const ySquash = 0.62;
     const rng = makeRng(0x1234abcd);
     // place a downscaled, rotated, optionally extra-squashed galaxy sprite
@@ -3011,7 +3660,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       sg.translate(C + dx, C + dy);
       sg.rotate(rot);
       sg.scale(1, extraSquashY);
-      sg.globalAlpha = 0.85;
+      sg.globalAlpha = 1;
       sg.drawImage(galaxyCv, -dia / 2, -dia / 2, dia, dia);
       sg.restore();
     };
@@ -3028,15 +3677,45 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       sg.arc(x, y, dia / 2, 0, TAU);
       sg.fill();
     };
-    // faint filament hints MW -> M31 -> M33 (baked)
-    {
-      sg.strokeStyle = 'rgba(90,180,200,0.05)';
-      sg.lineWidth = 1;
+    // ROUND 15: a deep field of distant background galaxies (tiny soft ellipses
+    // at random orientations) so the Local Group floats in a populated universe.
+    for (let k = 0; k < CLUSTER_BG_N; k++) {
+      const x = rng() * clusterPx;
+      const y = rng() * clusterPx;
+      const rad = 0.9 + rng() * 2.4;
+      const warm = rng() < 0.25;
+      sg.save();
+      sg.translate(x, y);
+      sg.rotate(rng() * Math.PI);
+      sg.scale(1, 0.35 + rng() * 0.55);
+      const grad = sg.createRadialGradient(0, 0, 0, 0, 0, rad);
+      const a = 0.1 + rng() * 0.22;
+      if (warm) {
+        grad.addColorStop(0, rgba(255, 225, 190, a));
+        grad.addColorStop(1, rgba(255, 225, 190, 0));
+      } else {
+        grad.addColorStop(0, rgba(170, 215, 255, a));
+        grad.addColorStop(1, rgba(170, 215, 255, 0));
+      }
+      sg.fillStyle = grad;
       sg.beginPath();
-      sg.moveTo(C - span / 2, C + 0.15 * span);
-      sg.lineTo(C + span / 2, C - 0.1 * span);
-      sg.lineTo(C + span * 0.62, C + 0.28 * span);
-      sg.stroke();
+      sg.arc(0, 0, rad, 0, TAU);
+      sg.fill();
+      sg.restore();
+    }
+    // filament hints MW -> M31 -> M33 (baked): a wide faint haze + a thin core
+    {
+      sg.lineCap = 'round';
+      for (let pass = 0; pass < 2; pass++) {
+        sg.strokeStyle = pass === 0 ? 'rgba(90,180,200,0.03)' : 'rgba(120,200,220,0.12)';
+        sg.lineWidth = pass === 0 ? Math.max(3, clusterPx * 0.008) : 1;
+        sg.beginPath();
+        sg.moveTo(C - span / 2, C + 0.15 * span);
+        sg.lineTo(C + span / 2, C - 0.1 * span);
+        sg.lineTo(C + span * 0.62, C + 0.28 * span);
+        sg.stroke();
+      }
+      sg.lineCap = 'butt';
     }
     // ~20 dwarfs scattered within an ellipse (seeded so the layout is stable)
     for (let k = 0; k < CLUSTER_DWARF_N; k++) {
@@ -3044,7 +3723,7 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       const rr = Math.sqrt(rng()) * span * 0.85;
       const dx = rr * Math.cos(a0);
       const dy = rr * Math.sin(a0) * ySquash;
-      glow(dx, dy, galDia * (0.05 + rng() * 0.05), 150, 190, 200, 0.12 + rng() * 0.13);
+      glow(dx, dy, galDia * (0.06 + rng() * 0.06), 150, 190, 200, 0.2 + rng() * 0.2);
     }
     // satellites + companions
     glow(-span * 0.5 - galDia * 0.18, 0.3 * span, galDia * 0.22, 170, 200, 255, 0.3); // LMC
@@ -3179,8 +3858,8 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       for (let j = i + 1; j < WEB_NODE_N && found < WEB_EDGE_NEIGHBORS; j++) {
         const d = Math.hypot(nodeX[i] - nodeX[j], nodeY[i] - nodeY[j]);
         if (d > maxD || d < 1) continue;
-        const a = WEB_EDGE_ALPHA * (1 - d / maxD);
-        sg.strokeStyle = rgba(80, 170, 190, a);
+        const a = WEB_EDGE_ALPHA * 1.8 * (1 - d / maxD);
+        sg.strokeStyle = rgba(90, 185, 205, a);
         sg.beginPath();
         sg.moveTo(nodeX[i], nodeY[i]);
         sg.lineTo(nodeX[j], nodeY[j]);
@@ -3218,19 +3897,28 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
         webGlintPh[i] = i * 1.3;
       }
     }
-    // CMB horizon rim (warm primordial edge) + inner haze
+    // CMB horizon rim (warm primordial edge) + inner haze. ROUND 15: the rim is
+    // a visible warm shell now (the edge of the observable), with an outer bloom.
     {
-      sg.strokeStyle = 'rgba(255,210,170,0.06)';
-      sg.lineWidth = 1.5;
+      sg.strokeStyle = 'rgba(255,210,170,0.2)';
+      sg.lineWidth = 2;
       sg.beginPath();
       sg.arc(C, C, webPx * 0.47, 0, TAU);
       sg.stroke();
-      const haze = sg.createRadialGradient(C, C, webPx * 0.4, C, C, webPx * 0.47);
-      haze.addColorStop(0, 'rgba(150,120,160,0)');
-      haze.addColorStop(1, 'rgba(150,120,160,0.04)');
+      const haze = sg.createRadialGradient(C, C, webPx * 0.36, C, C, webPx * 0.47);
+      haze.addColorStop(0, 'rgba(170,130,160,0)');
+      haze.addColorStop(0.7, 'rgba(190,140,160,0.05)');
+      haze.addColorStop(1, 'rgba(255,200,170,0.12)');
       sg.fillStyle = haze;
       sg.beginPath();
       sg.arc(C, C, webPx * 0.47, 0, TAU);
+      sg.fill();
+      const bloom = sg.createRadialGradient(C, C, webPx * 0.47, C, C, webPx * 0.5);
+      bloom.addColorStop(0, 'rgba(255,205,170,0.1)');
+      bloom.addColorStop(1, 'rgba(255,205,170,0)');
+      sg.fillStyle = bloom;
+      sg.beginPath();
+      sg.arc(C, C, webPx * 0.5, 0, TAU);
       sg.fill();
     }
     // Laniakea home marker near the first attractor knot (our supercluster)
@@ -3244,16 +3932,34 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     const breath = reducedMotion ? 1 : 0.85 + 0.15 * Math.sin((clock * TAU) / WEB_BREATH_SEC);
     const sizeCss = webPx / dpr;
     g.globalCompositeOperation = 'lighter';
+    // ROUND 15: a deeper second copy (smaller, dimmer, counter-rotating) sits
+    // behind the main web so the lattice has depth instead of reading as a flat
+    // disc; the main layer turns very slowly the other way.
+    const rotMain = reducedMotion ? 0 : clock * 0.006;
+    const rotDeep = WEB_DEEP_ROT - (reducedMotion ? 0 : clock * 0.011);
+    g.save();
+    g.translate(cx, cy);
+    g.rotate(rotDeep);
+    g.globalAlpha = aU * WEB_DEEP_ALPHA * breath;
+    const deep = sizeCss * WEB_DEEP_SCALE;
+    g.drawImage(webCv, -deep / 2, -deep / 2, deep, deep);
+    g.restore();
+    g.save();
+    g.translate(cx, cy);
+    g.rotate(rotMain);
     g.globalAlpha = aU * breath;
-    g.drawImage(webCv, cx - sizeCss / 2, cy - sizeCss / 2, sizeCss, sizeCss);
+    g.drawImage(webCv, -sizeCss / 2, -sizeCss / 2, sizeCss, sizeCss);
+    g.restore();
     g.globalAlpha = 1;
     const k = sizeCss / webPx;
-    const hX = cx + webHomeX * k;
-    const hY = cy + webHomeY * k;
+    const crm = Math.cos(rotMain);
+    const srm = Math.sin(rotMain);
+    const hX = cx + (webHomeX * crm - webHomeY * srm) * k;
+    const hY = cy + (webHomeX * srm + webHomeY * crm) * k;
     // supercluster knots pulse independently
     for (let i = 0; i < WEB_GLINT_N; i++) {
-      const gx = cx + webGlintX[i] * k;
-      const gy = cy + webGlintY[i] * k;
+      const gx = cx + (webGlintX[i] * crm - webGlintY[i] * srm) * k;
+      const gy = cy + (webGlintX[i] * srm + webGlintY[i] * crm) * k;
       const tw = reducedMotion ? 0.7 : 0.7 + 0.3 * Math.sin(clock * 0.5 + webGlintPh[i]);
       g.globalAlpha = aU * tw;
       g.fillStyle = 'rgba(200,230,255,1)';
@@ -3364,6 +4070,66 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       multiScreenY[bI] = scy;
       g.globalAlpha = aM;
       g.drawImage(multiCv, bI * cell, 0, cell, cell, scx - cssCell / 2, scy - cssCell / 2, cssCell, cssCell);
+    }
+    g.globalAlpha = 1;
+    // ROUND 15: soap-film rims. Each bubble gets a thin tinted rim circle plus
+    // a brighter Fresnel highlight arc on its upper-left, so the fog reads as a
+    // set of translucent spheres instead of blurred blobs.
+    g.lineWidth = 1.2;
+    for (let bI = 0; bI < MULTI_BUBBLE_N; bI++) {
+      const t = MULTI_TINTS[multiTint[bI]];
+      const r = multiR[bI] / dpr;
+      g.strokeStyle = rgba(Math.min(255, t[0] + 50), Math.min(255, t[1] + 40), 255, 1);
+      g.globalAlpha = 0.2 * aM;
+      g.beginPath();
+      g.arc(multiScreenX[bI], multiScreenY[bI], r, 0, TAU);
+      g.stroke();
+      g.globalAlpha = 0.42 * aM;
+      g.lineWidth = 1.8;
+      g.beginPath();
+      g.arc(multiScreenX[bI], multiScreenY[bI], r * 0.965, -2.5, -1.15);
+      g.stroke();
+      g.lineWidth = 1.2;
+    }
+    g.globalAlpha = 1;
+    // ROUND 15: nucleation sparks, a new pocket universe flashing into being
+    // inside a bubble every few seconds (expanding ring + white core, pooled).
+    if (!reducedMotion && clock >= nextNucleateAt) {
+      nextNucleateAt = clock + NUCLEATE_MIN_SEC + Math.random() * (NUCLEATE_MAX_SEC - NUCLEATE_MIN_SEC);
+      for (let s = 0; s < NUCLEATE_POOL; s++) {
+        if (nucOn[s]) continue;
+        const bI = (Math.random() * MULTI_BUBBLE_N) | 0;
+        const ang = Math.random() * TAU;
+        const rr = Math.sqrt(Math.random()) * (multiR[bI] / dpr) * 0.7;
+        nucX[s] = multiScreenX[bI] + Math.cos(ang) * rr;
+        nucY[s] = multiScreenY[bI] + Math.sin(ang) * rr;
+        nucBorn[s] = clock;
+        nucOn[s] = 1;
+        break;
+      }
+    }
+    for (let s = 0; s < NUCLEATE_POOL; s++) {
+      if (!nucOn[s]) continue;
+      const kk = (clock - nucBorn[s]) / NUCLEATE_SEC;
+      if (kk >= 1) {
+        nucOn[s] = 0;
+        continue;
+      }
+      const ease = kk * (2 - kk);
+      const fade = (1 - kk) * (1 - kk) * aM;
+      g.strokeStyle = 'rgba(220, 240, 255, 1)';
+      g.lineWidth = 1.4;
+      g.globalAlpha = 0.7 * fade;
+      g.beginPath();
+      g.arc(nucX[s], nucY[s], 1.5 + ease * NUCLEATE_R, 0, TAU);
+      g.stroke();
+      if (kk < 0.35) {
+        g.fillStyle = 'rgba(255, 255, 255, 1)';
+        g.globalAlpha = (1 - kk / 0.35) * 0.9 * aM;
+        g.beginPath();
+        g.arc(nucX[s], nucY[s], 1.5 + ease * 4, 0, TAU);
+        g.fill();
+      }
     }
     g.globalAlpha = 1;
     // iridescent seam shimmer: for each overlapping pair, paint a small bright
@@ -3522,17 +4288,17 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
       g.stroke();
     }
     g.globalAlpha = 1;
-    // a single faint tesseract (hypercube) wireframe at center for flavor: an
-    // outer cube and an inner cube joined corner to corner, slowly spinning.
-    drawTesseract(half * 0.34, spin, shimmer);
-    // label fades in late
+    // ROUND 15: a true 4D tesseract (double rotation, two-stage perspective) at
+    // the center of the brane stack.
+    drawTesseract(half * TESS_SIZE, spin, shimmer);
+    // label fades in late (bottom-left, clear of the sheets)
     if (aP > 0.9) {
       g.globalCompositeOperation = 'source-over';
       g.font = HOLO_LABEL_FONT;
       g.textBaseline = 'alphabetic';
       g.fillStyle = '#cfe0ff';
       g.globalAlpha = (aP - 0.9) / 0.1;
-      g.fillText('STACKED BRANES', cx - 44, cy - half * 0.62);
+      g.fillText('STACKED BRANES // TESSERACT', 12, 46);
       g.globalAlpha = 1;
       g.globalCompositeOperation = 'lighter';
     }
@@ -3540,45 +4306,73 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     g.globalCompositeOperation = 'source-over';
   }
 
-  // Tesseract: a 2D projection of a rotating hypercube (outer + inner square with
-  // connecting struts), a faint flavor accent at the center of the brane stack.
-  const tessOuter = new Float32Array(8); // 4 corners x (x,y)
-  const tessInner = new Float32Array(8);
+  // Tesseract: the 16 vertices of a hypercube rotated in two orthogonal 4D
+  // planes (XW and YZ, plus a slow XY drift), projected 4D -> 3D by perspective
+  // in w, then 3D -> 2D by perspective in z. Edges nearer the viewer draw
+  // brighter; each vertex gets a small dot. Allocation-free (hoisted scratch).
   function drawTesseract(size: number, spin: number, shimmer: number): void {
-    const ca = Math.cos(spin * 0.6);
-    const sa = Math.sin(spin * 0.6);
-    const inner = size * 0.5;
-    // 4 corners of a square, rotated by the slow spin, for outer + inner cube
-    for (let k = 0; k < 4; k++) {
-      const ang = (k * TAU) / 4 + Math.PI / 4;
-      const ox = Math.cos(ang) * size;
-      const oy = Math.sin(ang) * size;
-      tessOuter[k * 2] = cx + (ox * ca - oy * sa);
-      tessOuter[k * 2 + 1] = cy + (ox * sa + oy * ca) * 0.8;
-      const ix = Math.cos(ang) * inner;
-      const iy = Math.sin(ang) * inner;
-      tessInner[k * 2] = cx + (ix * ca - iy * sa);
-      tessInner[k * 2 + 1] = cy + (ix * sa + iy * ca) * 0.8;
+    const a1 = spin * 0.9; // XW
+    const a2 = spin * 0.55 + 0.7; // YZ
+    const a3 = spin * 0.25; // XY drift
+    const c1 = Math.cos(a1);
+    const s1 = Math.sin(a1);
+    const c2 = Math.cos(a2);
+    const s2 = Math.sin(a2);
+    const c3 = Math.cos(a3);
+    const s3 = Math.sin(a3);
+    for (let v = 0; v < 16; v++) {
+      let x = TESS_V[v * 4];
+      let y = TESS_V[v * 4 + 1];
+      let z = TESS_V[v * 4 + 2];
+      let w4 = TESS_V[v * 4 + 3];
+      // rotate XW
+      const x1 = x * c1 - w4 * s1;
+      const w1 = x * s1 + w4 * c1;
+      x = x1;
+      w4 = w1;
+      // rotate YZ
+      const y1 = y * c2 - z * s2;
+      const z1 = y * s2 + z * c2;
+      y = y1;
+      z = z1;
+      // rotate XY
+      const x2 = x * c3 - y * s3;
+      const y2 = x * s3 + y * c3;
+      x = x2;
+      y = y2;
+      // 4D -> 3D perspective (w toward the viewer)
+      const p4 = TESS_D4 / (TESS_D4 - w4);
+      const X = x * p4;
+      const Y = y * p4;
+      const Z = z * p4;
+      // 3D -> 2D perspective
+      const p3 = TESS_D3 / (TESS_D3 - Z);
+      tessX[v] = cx + X * p3 * size;
+      tessY[v] = cy - Y * p3 * size * 0.9;
+      tessZ[v] = (Z + w4) * 0.5; // depth cue (-1..1-ish)
     }
     g.globalCompositeOperation = 'lighter';
-    g.lineWidth = 1;
     const tessRgb = TESSERACT_RGB;
     g.strokeStyle = rgba(tessRgb[0], tessRgb[1], tessRgb[2], 1);
-    g.globalAlpha = aP * (0.18 + 0.12 * shimmer);
-    g.beginPath();
-    for (let k = 0; k < 4; k++) {
-      const n = (k + 1) % 4;
-      // outer edge
-      g.moveTo(tessOuter[k * 2], tessOuter[k * 2 + 1]);
-      g.lineTo(tessOuter[n * 2], tessOuter[n * 2 + 1]);
-      // inner edge
-      g.moveTo(tessInner[k * 2], tessInner[k * 2 + 1]);
-      g.lineTo(tessInner[n * 2], tessInner[n * 2 + 1]);
-      // strut outer -> inner
-      g.moveTo(tessOuter[k * 2], tessOuter[k * 2 + 1]);
-      g.lineTo(tessInner[k * 2], tessInner[k * 2 + 1]);
+    g.fillStyle = 'rgba(230, 245, 255, 1)';
+    const base = aP * (0.24 + 0.12 * shimmer);
+    g.lineWidth = 1;
+    for (let e = 0; e < TESS_E.length; e += 2) {
+      const a = TESS_E[e];
+      const b = TESS_E[e + 1];
+      const depth = 0.5 + 0.25 * (tessZ[a] + tessZ[b]); // 0 far .. 1 near
+      g.globalAlpha = base * (0.45 + 0.8 * depth);
+      g.beginPath();
+      g.moveTo(tessX[a], tessY[a]);
+      g.lineTo(tessX[b], tessY[b]);
+      g.stroke();
     }
-    g.stroke();
+    for (let v = 0; v < 16; v++) {
+      const depth = 0.5 + 0.5 * tessZ[v];
+      g.globalAlpha = aP * (0.35 + 0.5 * depth);
+      const d = 1.6 + 1.4 * depth;
+      g.fillRect(tessX[v] - d / 2, tessY[v] - d / 2, d, d);
+    }
     g.globalAlpha = 1;
   }
 
@@ -3670,6 +4464,20 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     else if (zoomTarget > ZOOM_MAX) zoomTarget = ZOOM_MAX;
   };
   canvas.addEventListener('wheel', onWheel, { passive: false });
+
+  // ROUND 15: ladder rungs jump the zoom to that regime's band center.
+  const onLadderClick = (e: Event): void => {
+    const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('.globe__rung');
+    if (!btn) return;
+    const rung = LADDER.find((r) => r.reg === btn.dataset.reg);
+    if (!rung) return;
+    zoomTarget = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, rung.z));
+    // keep the auto-spin resume timer sane after a jump back to Earth
+    if (rung.reg === 'E') resumeAt = Math.min(resumeAt, clock + 1);
+  };
+  ladder.addEventListener('click', onLadderClick);
+  // a wheel over a rung label still zooms (the rungs take pointer events)
+  ladder.addEventListener('wheel', onWheel, { passive: false });
 
   // --- wiring: store events, visibility, resize, theme ----------------------
   const unsubscribers: Array<() => void> = [];
@@ -3768,6 +4576,8 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
         // so snap zoom and repaint a few frames (sequenceCosmic builds one lazy
         // cosmic canvas per draw, so several draws are needed to bake + show M/P).
         zoom = zoomTarget;
+        prevZoomForVel = zoom; // a QA snap is not travel: no star streaks
+        zoomVel = 0;
         for (let i = 0; i < 6; i++) draw();
       }
       return { zoom, zoomTarget, regime: regime(), eclipticAz };
@@ -3803,6 +4613,8 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     if (ro) ro.disconnect();
     canvas.removeEventListener('pointerdown', onPointerDown);
     canvas.removeEventListener('wheel', onWheel);
+    ladder.removeEventListener('click', onLadderClick);
+    ladder.removeEventListener('wheel', onWheel);
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('pointercancel', onPointerUp);

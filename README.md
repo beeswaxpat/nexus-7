@@ -30,7 +30,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ### Ambient scenes
 
-- GLOBE: a wireframe holographic Earth with real satellites and the ISS, plus an 8-level zoom-out that recedes through Earth, cislunar space, the solar system, the Milky Way, the Local Group, the observable universe, the multiverse, and the dimensional planes. Occasional meteors arrive with shockwave impacts.
+- GLOBE: a holographic Earth with dot-matrix continents in real day and night, city lights that switch on as the terminator passes, real satellites and the ISS, and a parallax star field. Scroll to pull back through 8 phases: Earth, cislunar space (Moon, its trail, the Lagrange points), the solar system (planet trails, the asteroid and Kuiper belts, corona), the Milky Way, the Local Group, the observable universe, the multiverse, and the dimensional planes with a 4D tesseract. Stars streak as you travel, a shell pulse marks each boundary, a live SCALE readout counts the field width from kilometers to gigalight-years, and the ladder on the right jumps straight to any phase. Occasional meteors arrive with shockwave impacts.
 - NIGHT CITY: a synthwave skyline with a rare alien UFO flyover and an ULTRA neon mode.
 - Either scene can be swapped or hidden.
 

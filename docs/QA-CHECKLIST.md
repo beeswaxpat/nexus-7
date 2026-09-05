@@ -12,8 +12,12 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 ## Globe and scenes
 
-- [ ] Globe renders the wireframe Earth with live satellites and the ISS.
-- [ ] Scroll-zoom OUT runs through all 8 phases in order: Earth, cislunar (Moon), solar system, Milky Way, Local Group, universe, multiverse, and the terminal Stacked Branes view.
+- [ ] Globe renders the Earth with dot-matrix continents (gold by day, cyan by night), city lights on the night side, the wireframe, live satellites and the ISS, and a star field behind it.
+- [ ] Drag the globe to the night side: city lights are visible over the dark continents and fade out across the terminator.
+- [ ] Scroll-zoom OUT runs through all 8 phases in order: Earth, cislunar (Moon), solar system, Milky Way, Local Group, universe, multiverse, and the terminal Stacked Branes view. Stars streak toward the center while the zoom is moving and settle when it stops; a ring pulse fires at each phase boundary.
+- [ ] The SCALE line under the tag counts up (KM, AU, LY, MLY, GLY) as you pull back, then reads BEYOND THE HORIZON / OUTSIDE SPACETIME.
+- [ ] The ladder on the right highlights the current phase; clicking a rung jumps to it; the wheel still zooms while the pointer is over the ladder.
+- [ ] Cislunar: the Moon shows a glow, LUNA + live range, a motion trail, and L1/L2/L4/L5 markers. Solar: planets sit on their rings after a drag yaw, with motion trails, Saturn's ring, the asteroid belt, and all eight labels.
 - [ ] Zoom back IN returns smoothly to Earth.
 - [ ] Night City scene renders (animated noir skyline) and a single UFO flyover appears within a minute or so.
 

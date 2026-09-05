@@ -173,14 +173,151 @@
   56%, 100% { opacity: 0.2; }
 }
 
-/* Narrow viewports: drop the rivets, shrink the lip. */
+/* --- ROUND 15: scale readout + the scale ladder ---------------------------- */
+
+/* Live field-width readout, second line under the uplink tag. */
+.globe__scale {
+  position: absolute;
+  top: 19px;
+  left: 8px;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 70%, var(--text-faint));
+  text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 45%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The ladder: a vertical rail on the right with one rung per regime. The rail
+   is the ::before hairline; the cursor slides along it with the eased zoom. */
+.globe__ladder {
+  position: absolute;
+  top: 34px;
+  bottom: 30px;
+  right: 12px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 92px;
+  pointer-events: none;
+}
+
+.globe__ladder::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  right: 3px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--accent) 35%, transparent) 12%,
+    color-mix(in srgb, var(--accent) 35%, transparent) 88%,
+    transparent
+  );
+}
+
+.globe__ladder-cursor {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow-mid), 0 0 2px #fff;
+  transition: top 120ms linear;
+  pointer-events: none;
+}
+
+.globe__rung {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  opacity: 0.55;
+  transition: opacity 140ms ease, color 140ms ease;
+}
+
+.globe__rung:hover,
+.globe__rung:focus-visible {
+  opacity: 1;
+  color: var(--text-dim, #9fb3c8);
+  outline: none;
+}
+
+.globe__rung-dot {
+  order: 2;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: transparent;
+  box-sizing: border-box;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+
+.globe__rung-label {
+  order: 1;
+  white-space: nowrap;
+}
+
+.globe__rung--on {
+  opacity: 1;
+  color: var(--accent);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.globe__rung--on .globe__rung-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--glow-mid);
+}
+
+/* Mid-width panels (the corner slot at the window floor): only the active or
+   hovered rung shows its label so the rail never crowds the globe. */
+@container (max-width: 320px) {
+  .globe__ladder { width: 80px; }
+  .globe__rung-label { display: none; }
+  .globe__rung--on .globe__rung-label,
+  .globe__rung:hover .globe__rung-label,
+  .globe__rung:focus-visible .globe__rung-label { display: inline; }
+}
+
+/* Narrow viewports: drop the rivets, shrink the lip, collapse the ladder to dots. */
 @container (max-width: 220px) {
   .globe__bezel::before,
   .globe__bezel::after { display: none; }
   .globe__lip { height: 14px; }
+  .globe__ladder { width: 12px; }
+  .globe__rung-label { display: none; }
+}
+
+/* Short viewports: the ladder needs room for eight rungs. */
+@container (max-height: 150px) {
+  .globe__ladder { display: none; }
+  .globe__scale { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .globe__tag-dot { animation: none; }
   .globe__telem-dot { animation: none; }
+  .globe__ladder-cursor { transition: none; }
 }
