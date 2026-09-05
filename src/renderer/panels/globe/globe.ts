@@ -2047,8 +2047,11 @@ export function mountGlobe(container: HTMLElement, ctx: AppContext): void {
     // Earth ocean sphere at full size (faded by aE), plus a small thumbnail in
     // regime C (drawn later in the cislunar pass at 2 * R*0.16).
     if (sphereSize > 0 && aE > 0.003) {
+      // ROUND 15: the ocean disc + atmosphere recede WITH the wireframe (it used
+      // to stay full-size and fade, leaving a big rim halo hanging mid-zoom).
+      const ss = sphereSize * (Rearth / R);
       g.globalAlpha = aE;
-      g.drawImage(sphere, cx - sphereSize / 2, cy - sphereSize / 2, sphereSize, sphereSize);
+      g.drawImage(sphere, cx - ss / 2, cy - ss / 2, ss, ss);
       g.globalAlpha = 1;
     }
 
