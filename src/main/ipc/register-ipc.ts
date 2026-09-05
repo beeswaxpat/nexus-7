@@ -16,7 +16,7 @@ export function registerIpc(win: BrowserWindow): void {
 
   ipcMain.handle(IPC.DATA_REFRESH, () => {
     // Plumbing hook: a manual refresh re-pushes the current snapshot so the UI
-    // repaints. Adapter-driven re-fetch is added when adapters go live (Phase 3).
+    // repaints from the cache (the scheduler owns the real re-fetch cadence).
     const snap = cache.snapshot();
     if (!win.isDestroyed()) {
       win.webContents.send(IPC.PUSH_CRYPTO, snap.crypto);

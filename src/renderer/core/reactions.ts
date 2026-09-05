@@ -1,4 +1,4 @@
-// IMPLEMENTED (pure reaction logic per PORTING_SPEC.md). Central source of truth so
+// Pure reaction logic. Central source of truth so
 // overlays, the wormhole, asset rows, and the F&G bar all react identically. No DOM
 // here, no side effects: just inputs -> decisions. Thresholds come from constants.
 
@@ -98,15 +98,4 @@ export function fngBands(value: number): FngBand {
   if (value === 50) return { level: 'Neutral', color: '#cccccc' };
   if (value <= 74) return { level: 'Greed', color: '#37d67a' };
   return { level: 'Extreme Greed', color: '#00ff88' };
-}
-
-/**
- * True if ANY asset in a box has abs(24h change) >= the orbit threshold.
- * Pure, tested helper kept for reuse; no UI currently calls it (the avatar-orbit
- * overlay it was written for is not wired up).
- */
-export function shouldOrbit(boxAssets: AssetQuote[]): boolean {
-  return boxAssets.some(
-    (q) => q.change24h != null && Math.abs(q.change24h) >= REACTION.avatarOrbit
-  );
 }

@@ -86,7 +86,6 @@ body::before {
    (var(--aberration)); --accent still drives the main glow so it stays on-theme.
    Applies to the panel/box display titles + the command-center stat headline. */
 .asset-box__title,
-.panel-stub__title,
 .ap-title,
 .bstat__price,
 .ncity__title,

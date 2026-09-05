@@ -6,7 +6,7 @@
 .chat {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -85,7 +85,9 @@
 /* --- message list ------------------------------------------------------- */
 .chat__list {
   flex: 1 1 auto;
-  min-height: 0;
+  /* a real floor: at the 1024x640 window minimum the quick row + input row used to
+     eat the whole COMMS cell and this list collapsed to 0 px (messages invisible) */
+  min-height: 48px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -159,16 +161,25 @@
 .chat__quick {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  /* ONE row that scrolls sideways instead of wrapping: wrapping to two rows
+     stole the message list's height on narrow windows */
+  flex-wrap: nowrap;
   gap: 6px;
-  row-gap: 6px;
   flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+}
+.chat__quick::-webkit-scrollbar {
+  display: none;
 }
 
 .chat__quick-btn {
   font-size: 15px;
   line-height: 1;
   padding: 5px 8px;
+  flex: 0 0 auto;
 }
 
 /* --- input row ---------------------------------------------------------- */

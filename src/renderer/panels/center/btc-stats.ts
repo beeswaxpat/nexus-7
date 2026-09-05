@@ -440,14 +440,9 @@ export function mountBtcStats(container: HTMLElement, ctx: AppContext): void {
   const onSecondaryChanged = (): void => renderSecondary();
   window.addEventListener('nexus:secondary-changed', onSecondaryChanged);
 
-  // a row's quantity editor bubbles nexus:holdings-changed to window after
-  // persisting; recompute the BUG NUT total at once AND again after 250 ms,
-  // because the settings persist is async (mirrors asset-box.ts: the cache
-  // refreshes after the event fires).
-  const onHoldingsChanged = (): void => {
-    renderBugNut();
-    setTimeout(renderBugNut, 250);
-  };
+  // a row's quantity editor bubbles nexus:holdings-changed to window once its
+  // persist has resolved (settings cache already fresh): one recompute is enough.
+  const onHoldingsChanged = (): void => renderBugNut();
   window.addEventListener('nexus:holdings-changed', onHoldingsChanged);
 
   // re-apply the BUG NUT value's blur on any privacy flip from another panel

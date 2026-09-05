@@ -26,12 +26,27 @@ function boot(): void {
   });
 }
 
-// No requestSingleInstanceLock(): a second launch opening its own window is acceptable for this tool.
-app.whenReady().then(boot);
+// Single instance: two copies would share (and clobber) the one settings.json and
+// open two chat sockets. A second launch just focuses the running window.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const win = mainWindow;
+    if (!win || win.isDestroyed()) return;
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) boot();
-});
+  app.whenReady().then(boot);
+
+  app.on('activate', () => {
+    // macOS dock re-activation with no window. registerIpc/startScheduler are
+    // idempotent enough for a re-boot here; Windows never takes this path.
+    if (BrowserWindow.getAllWindows().length === 0) boot();
+  });
+}
 
 app.on('window-all-closed', () => {
   stopScheduler();

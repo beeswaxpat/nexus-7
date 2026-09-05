@@ -149,10 +149,23 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
   let lastTime = -Infinity;
   let hasData = false;
 
+  // True while the user has scrolled back into history. Reconciles and new bars
+  // only snap the view to real time when the user is already at the live edge,
+  // so a 5-minute reconcile never yanks them away from what they were reading.
+  const atLiveEdge = (): boolean => {
+    try {
+      const pos = chart.timeScale().scrollPosition();
+      return !Number.isFinite(pos) || pos >= -1;
+    } catch {
+      return true;
+    }
+  };
+
   const setHistory = (candles: readonly Candle[] | null | undefined): void => {
     if (!candles || candles.length === 0) return;
     const clean = sanitizeHistory(candles);
     if (clean.length === 0) return;
+    const follow = !hasData || atLiveEdge();
     try {
       series.setData(clean.map(toCandle));
       lastTime = clean[clean.length - 1].time;
@@ -160,7 +173,7 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
       empty.style.display = 'none';
       // keep the latest bars in view at the fixed bar spacing (NOT fitContent,
       // which would squash the whole history into the cell).
-      chart.timeScale().scrollToRealTime();
+      if (follow) chart.timeScale().scrollToRealTime();
     } catch (err) {
       console.error('[btc-chart] setData failed', err);
     }
@@ -171,6 +184,7 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
     // Reject bars older than the last one we drew; allow same (update) or newer.
     if (candle.time < lastTime) return;
     const isNewBar = Number.isFinite(lastTime) && candle.time > lastTime;
+    const follow = isNewBar && atLiveEdge();
     try {
       series.update(toCandle(candle));
       lastTime = candle.time;
@@ -178,8 +192,9 @@ export function mountBtcChart(container: HTMLElement, ctx: AppContext): void {
         hasData = true;
         empty.style.display = 'none';
       }
-      // a brand-new minute bar: keep the view tracking real time so it visibly moves.
-      if (isNewBar) chart.timeScale().scrollToRealTime();
+      // a brand-new minute bar: keep the view tracking real time so it visibly
+      // moves, unless the user has scrolled back into history.
+      if (follow) chart.timeScale().scrollToRealTime();
     } catch (err) {
       console.error('[btc-chart] update failed', err);
     }

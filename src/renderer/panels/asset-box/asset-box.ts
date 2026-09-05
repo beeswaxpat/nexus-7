@@ -299,14 +299,10 @@ export function mountAssetBox(
   const unsubCrypto = ctx.store.subscribe('crypto', () => render());
   const unsubStocks = ctx.store.subscribe('stocks', () => render());
 
-  // a row's quantity editor bubbles this after persisting; re-render so the box
-  // total updates AND the rows re-order by bag size (biggest bag on top). The
-  // persist is async (the event fires before the settings cache refreshes), so
-  // render again shortly after to pick up the committed quantity.
-  root.addEventListener('nexus:holdings-changed', () => {
-    render();
-    setTimeout(render, 250);
-  });
+  // a row's quantity editor bubbles this AFTER its persist has resolved (the
+  // settings cache is already fresh), so one render updates the box total and
+  // re-orders the rows by bag size (biggest bag on top).
+  root.addEventListener('nexus:holdings-changed', () => render());
 
   // privacy flips broadcast on window: re-sync this box's eye glyph + re-render so
   // the TOTAL, bag cells, and yield amounts all blur/unblur together (both boxes +

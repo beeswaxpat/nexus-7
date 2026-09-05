@@ -1,8 +1,8 @@
 /* ===========================================================================
    Component chassis: the neon-edged boxes/panels that frame every co-located
-   panel, the center command well, shared scrollbars, focus rings, the Phase-0
-   stub card, and the asset-row / clock micro-skins that ride on top of each
-   panel's own co-located CSS.
+   panel, the center command well, shared scrollbars, focus rings, and the
+   asset-row / clock micro-skins that ride on top of each panel's own co-located
+   CSS.
 
    Division of labor: each panel's *.css owns its INTERNAL layout + skin. This
    file owns the OUTER frames and cross-panel primitives. Reaction states recolor
@@ -147,7 +147,10 @@
    also enforces a minimum size; this is the belt to that suspender) */
 @media (max-height: 720px) {
   .cc {
-    grid-template-rows: minmax(80px, 1fr) auto auto auto minmax(140px, 1.2fr);
+    /* COMMS wins the spare height on short windows: its header + message list
+       + emoji strip + input need ~160px before anything is clipped, while the
+       graphic is happy at its 80px floor */
+    grid-template-rows: minmax(80px, 0.8fr) auto auto auto minmax(160px, 1.6fr);
   }
 }
 /* the wormhole cell: let the canvas own the space, clip any glow bleed */
@@ -295,50 +298,6 @@ a {
 }
 .asset-row__change--down {
   text-shadow: 0 0 8px color-mix(in srgb, var(--down) 40%, transparent);
-}
-
-/* ===========================================================================
-   Phase-0 stub card (the chat panel still uses placeholder() until Track C2
-   lands). Themed so the booted app looks intentional even with a stub present.
-   =========================================================================== */
-.panel-stub {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-  color: var(--text-dim);
-  position: relative;
-}
-.panel-stub::before {
-  /* a slow radar sweep so a stub still feels "alive" */
-  content: '';
-  position: absolute;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 1px solid var(--edge-faint);
-  box-shadow: 0 0 30px var(--glow-soft) inset;
-  opacity: 0.5;
-}
-.panel-stub__title {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent);
-  text-shadow: 0 0 12px var(--glow-mid);
-  position: relative;
-}
-.panel-stub__note {
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--text-faint);
-  position: relative;
 }
 
 /* ===========================================================================

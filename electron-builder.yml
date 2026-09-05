@@ -14,11 +14,17 @@ directories:
 
 # Only the compiled output ships inside app.asar. Source and node dev deps are
 # excluded. Runtime deps (mqtt, yahoo-finance2, rss-parser, lightweight-charts)
-# are pulled in automatically by their imports.
+# are pulled in automatically by their imports. Of resources/, only the optional
+# first-run seed and the icons ship: the personal .buddy seed and the offline
+# asset registry (a build-tool artifact nothing reads at runtime) never do.
+# scripts/check-seed.mjs runs before every packaging step and refuses to bundle a
+# personal seed unless NEXUS_ALLOW_SEED=1 is set on purpose.
 files:
   - dist-electron/**
   - dist-renderer/**
   - resources/**
+  - '!resources/seed-settings.buddy.json'
+  - '!resources/asset-registry.json'
   - assets/**
 
 # Compress the app payload so the single exe stays small.

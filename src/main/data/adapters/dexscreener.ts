@@ -112,13 +112,6 @@ export async function resolveBestPair(q: string): Promise<AssetDescriptor | null
   return p ? toDescriptor(p) : null;
 }
 
-/** Fetch a live AssetQuote for a query, mapping the highest-liquidity pair
- * (priceUsd, h24, marketCap||fdv). Used when a friend tracks a DEX-only token. */
-export async function fetchQuote(q: string): Promise<AssetQuote | null> {
-  const p = await bestPair(q);
-  return p ? toQuote(p) : null;
-}
-
 /**
  * Refresh a single, already-resolved DEX pair by its canonical identifiers, with no
  * re-search (stable identity: the key never drifts to a different pair). chainId and

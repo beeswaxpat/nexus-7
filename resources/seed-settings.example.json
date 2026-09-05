@@ -14,7 +14,6 @@
     "coingecko:hyperliquid"
   ],
   "username": "",
-  "btcTargetPrice": 250000,
   "activeRightTab": "news",
   "chaos": {
     "wormhole": true,
@@ -44,12 +43,10 @@
     "swapped": true,
     "showWormhole": true,
     "showNightCity": true,
-    "ultra": false,
     "ultraCity": false
   },
   "privateMode": false,
   "images": {
-    "useDefaults": true,
     "custom": []
   }
 }

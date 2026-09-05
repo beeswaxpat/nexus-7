@@ -1,4 +1,4 @@
-// The live-stream player behind BOTH the TV tab and the Video tab: a YouTube
+// The live-stream player behind BOTH the TV tab and the MONITOR tab: a YouTube
 // iframe embed of a persisted source (autoplay=1&mute=1), a one-click Unmute
 // button, one-click channel presets, a small source-config input, and a clean
 // "stream offline, open on YouTube" fallback when there is no url or the embed
@@ -110,7 +110,7 @@ function withPlaybackParams(embed: string): string {
 
 export interface LiveTvOptions {
   /** Settings field that persists this player's source. */
-  settingsKey: 'liveTvUrl' | 'videoTvUrl' | 'monitorUrl';
+  settingsKey: 'liveTvUrl' | 'monitorUrl';
   /** Source used when nothing is persisted yet. */
   defaultUrl: string;
   /** One-click channel buttons. */
@@ -151,8 +151,7 @@ export function mountLiveTv(container: HTMLElement, ctx: AppContext, opts?: Live
   // pointer-events:none so the YouTube controls inside the iframe remain
   // clickable. The iframe mounts into frameInner (not frameWrap), so it never
   // replaces the overlays, and frameWrap.hidden in showFallback still hides all.
-  const chLabel =
-    settingsKey === 'monitorUrl' ? 'CH-03' : settingsKey === 'videoTvUrl' ? 'CH-02' : 'CH-01';
+  const chLabel = settingsKey === 'monitorUrl' ? 'CH-03' : 'CH-01';
   // Default chrome reads as a shipboard receiver; callers (e.g. the MONITOR tab)
   // may override the prefix via opts.title to dress the same player differently.
   const hdPrefix = (opts?.title ?? '').trim() || 'SHIPBOARD RECEIVER';

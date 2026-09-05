@@ -6,7 +6,7 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 - [ ] App boots with no console errors (open DevTools, check the console).
 - [ ] App boots cleanly with NO `resources/seed-settings.json` present (falls back to defaults).
-- [ ] All panels populate: both asset boxes show rows with prices, the BTC chart renders candles, the center command center shows the BTC price and the road-to-target bar, the news panel shows headlines, and the bottom ticker scrolls with coins.
+- [ ] All panels populate: both asset boxes show rows with prices, the BTC chart renders candles, the center command center shows the BTC price, the TOTAL cell, and the gold second-slot card, the news panel shows headlines, and the bottom ticker scrolls with coins.
 - [ ] Fear and Greed index shows a value and a classification.
 - [ ] Drag a panel to a new slot and resize the left-column boxes; layout persists after a restart.
 
@@ -34,7 +34,8 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 - [ ] Jukebox: click Chillsynth (CH 01) and confirm audio plays and the equalizer animates.
 - [ ] MONITOR tab: cams load for several presets (New York, ISS live Earth, and at least one other).
-- [ ] TV and Video tabs load a live stream.
+- [ ] TV tab loads a live stream; Unmute brings up audio.
+- [ ] At the minimum window size (1024x640) the COMMS message list is still visible and the emoji strip scrolls sideways instead of wrapping.
 
 ## Accessibility
 
@@ -42,5 +43,6 @@ Run this before every release. Unit tests and CI cover the data layer; this list
 
 ## Packaged build
 
-- [ ] `npm run build:exe` completes and produces `dist/NEXUS-7-<version>.exe`.
+- [ ] `npm run build:exe` completes and produces `dist/NEXUS-7-<version>.exe` (the seed guard passes: no personal `resources/seed-settings.json` in place).
+- [ ] Launching the exe a second time focuses the running window instead of opening a second copy.
 - [ ] The packaged exe boots, populates panels, and chat connects (re-run the boot, panels, and chat items above on the exe).

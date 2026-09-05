@@ -5,8 +5,7 @@ import {
   emojiGlyph,
   emojiPulses,
   btcMode,
-  fngBands,
-  shouldOrbit
+  fngBands
 } from '../src/renderer/core/reactions';
 import type { AssetQuote } from '../src/shared/types';
 
@@ -205,18 +204,5 @@ describe('fngBands', () => {
   it('Extreme Greed at >= 75', () => {
     expect(fngBands(75)).toEqual({ level: 'Extreme Greed', color: '#00ff88' });
     expect(fngBands(100)).toEqual({ level: 'Extreme Greed', color: '#00ff88' });
-  });
-});
-
-describe('shouldOrbit', () => {
-  it('true when any asset has abs(change) >= 10', () => {
-    expect(shouldOrbit([quote(2), quote(10)])).toBe(true);
-    expect(shouldOrbit([quote(-15)])).toBe(true);
-  });
-
-  it('false when no asset reaches the orbit threshold', () => {
-    expect(shouldOrbit([quote(2), quote(-9.99)])).toBe(false);
-    expect(shouldOrbit([quote(null)])).toBe(false);
-    expect(shouldOrbit([])).toBe(false);
   });
 });

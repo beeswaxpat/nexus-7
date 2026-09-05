@@ -1,4 +1,4 @@
-// Phase 1 (Track B). Bottom full-width marquee. Renders store.ticker coins as
+// Bottom full-width marquee. Renders store.ticker coins as
 // "SYMBOL: $price (+x.xx%)" with an up/down class, laid out as one non-wrapping
 // row inside `.ticker__track`. The coin list is duplicated TWICE so the Visual
 // phase's translateX(-50%) keyframes loop seamlessly. Signature FROZEN: matches

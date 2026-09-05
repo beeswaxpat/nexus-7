@@ -224,7 +224,11 @@ function renderNews(
     if (!item) continue;
     ul.append(newsRow(item, now, ctx, category));
   }
+  // A push lands every few minutes; rebuilding the list must not yank a reader
+  // back to the top. Keep the scroll offset across the swap (clamped by the browser).
+  const scrollTop = body.scrollTop;
   body.replaceChildren(ul);
+  if (scrollTop > 0) body.scrollTop = scrollTop;
 }
 
 function newsRow(item: NewsItem, now: number, ctx: AppContext, category: NewsCategory): HTMLElement {

@@ -517,7 +517,15 @@ function createBrowserMock(): Bridge {
   };
 }
 
-/** Return the real bridge (Electron) or the browser-mock (plain browser). */
+let mockSingleton: Bridge | null = null;
+
+/**
+ * Return the real bridge (Electron) or the browser-mock (plain browser). The mock
+ * is created ONCE and reused: every caller (main.ts, the chat transport, ...) must
+ * see the same settings state and the same push timers, not a private copy.
+ */
 export function getBridge(): Bridge {
-  return window.nexus ?? createBrowserMock();
+  if (window.nexus) return window.nexus;
+  if (!mockSingleton) mockSingleton = createBrowserMock();
+  return mockSingleton;
 }

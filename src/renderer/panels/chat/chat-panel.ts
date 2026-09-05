@@ -16,7 +16,7 @@
 
 import type { AppContext } from '../../app-context';
 import { el, mount } from '../../core/dom';
-import { formatAge } from '../../core/format';
+import { formatClock } from '../../core/format';
 import { deriveKey, deriveTopic, encryptMsg, decryptMsg } from './crypto';
 import type { ChatMessage } from './crypto';
 import { createMqttClient } from './mqtt-client';
@@ -214,7 +214,9 @@ export function mountChatPanel(container: HTMLElement, ctx: AppContext): void {
     },
       el('div', { class: 'chat__meta' },
         el('span', { class: 'chat__user', text: msg.user || 'anon' }),
-        el('span', { class: 'chat__time', text: formatAge(msg.ts) })
+        // a fixed clock time, not a relative age: the row is never re-rendered, so
+        // a relative label would read "just now" forever
+        el('span', { class: 'chat__time', text: formatClock(msg.ts), title: new Date(msg.ts).toLocaleString() })
       ),
       el('span', { class: 'chat__text', text: msg.text })
     );

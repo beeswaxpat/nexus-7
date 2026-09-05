@@ -51,7 +51,7 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 
 ### Settings and chaos
 
-- Settings gear in the titlebar: upload your own images (multi-select, auto-downscaled), pick assets and holdings, and more.
+- Settings gear in the titlebar: upload your own images (multi-select, auto-downscaled) for the overlay.
 - Reactive "chaos": price-driven banners, accent recolor on pumps and dumps, and your uploaded images drifting in as overlays, all contained so they never break the layout.
 - Respects `prefers-reduced-motion`.
 
@@ -104,12 +104,12 @@ npm run selftest
 
 ## Configuration
 
-Open the Settings gear in the titlebar to configure:
+Most configuration happens in place on the dashboard:
 
-- Assets: pick your own coins and tickers for each of the two asset boxes, set the featured center asset and the gold second slot, and enter your holdings.
+- Assets: the + button on each asset box opens a search for any coin or ticker; click the featured asset name (or the gold second-slot card) in the command center to re-point it; click a row's market-cap cell to enter how many units you hold.
 - Images: the app ships with no images; add your own to the overlay pool from Settings (multi-select, auto-downscaled). They drift in over the dashboard and appear on big BTC moves.
 - Chat rooms: switch between the built-in PUBLIC room and a PRIVATE room. A private room is just a shared passphrase: everyone who types the same phrase lands in the same encrypted channel.
-- Scenes, privacy mode, and panel layout.
+- Scenes: hover a scene for its swap / hide / ULTRA controls. Privacy: the eye icon in either asset box blurs every dollar value. Layout: drag a panel's grip to swap it with another, drag the dividers between the left boxes to resize them.
 
 ### First-run seed (optional)
 

@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 2, Track C1). The single contained overlay layer that hosts
+// The single contained overlay layer that hosts
 // every reactive visual so they NEVER reflow the grid. mountOverlays:
 //   - reads the BTC row from store.crypto and maps its 24h change via
 //     core/reactions.btcMode to normal|pump|dump|lfg, then drives

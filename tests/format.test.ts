@@ -4,6 +4,7 @@ import {
   formatMarketCap,
   formatHoldingValue,
   formatAge,
+  formatClock,
   formatPercent
 } from '../src/renderer/core/format';
 
@@ -118,5 +119,16 @@ describe('formatPercent', () => {
   it('null / NaN -> placeholder', () => {
     expect(formatPercent(null)).toBe('...%');
     expect(formatPercent(NaN)).toBe('...%');
+  });
+});
+
+describe('formatClock', () => {
+  it('renders HH:MM in the local zone', () => {
+    const d = new Date(2026, 8, 5, 9, 7, 0);
+    expect(formatClock(d.getTime())).toBe('09:07');
+  });
+  it('returns an empty string for junk', () => {
+    expect(formatClock(null)).toBe('');
+    expect(formatClock(NaN)).toBe('');
   });
 });

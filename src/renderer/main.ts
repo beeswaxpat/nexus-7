@@ -1,11 +1,6 @@
 // Renderer entry. Boot order: get the bridge (real or browser-mock), load settings
 // first, start the feeds (snapshot + live pushes -> store), build the AppContext,
-// then mount every top-level panel into its container. Panels are Phase-0 stubs but
-// all imports resolve and the 3-column grid + ticker render with placeholders.
-
-// node-shim MUST be the FIRST import: it installs the Node globals mqtt.js needs
-// at eval time, before any module that pulls in mqtt loads (see core/node-shim.ts).
-import './core/node-shim';
+// then mount every top-level panel into its container.
 
 import './styles/tokens.css';
 import './styles/fonts.css';

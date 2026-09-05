@@ -44,7 +44,6 @@ export function mountScenes(
     swapped: ctx.settings?.scenes?.swapped ?? defScenes.swapped,
     showWormhole: ctx.settings?.scenes?.showWormhole ?? defScenes.showWormhole,
     showNightCity: ctx.settings?.scenes?.showNightCity ?? defScenes.showNightCity,
-    ultra: ctx.settings?.scenes?.ultra ?? defScenes.ultra,
     ultraCity: ctx.settings?.scenes?.ultraCity ?? defScenes.ultraCity
   });
 

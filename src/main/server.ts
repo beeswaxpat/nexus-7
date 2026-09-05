@@ -5,7 +5,7 @@
 
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 
 const MIME: Record<string, string> = {
@@ -43,8 +43,9 @@ export function startRendererServer(rootDir: string): Promise<string> {
             res.end('forbidden');
             return;
           }
-          // unknown path -> index.html (single-page fallback)
-          if (!existsSync(target)) target = join(root, 'index.html');
+          // unknown path OR a directory -> index.html (single-page fallback;
+          // readFile on a directory would otherwise throw EISDIR -> 500)
+          if (!existsSync(target) || statSync(target).isDirectory()) target = join(root, 'index.html');
           const data = await readFile(target);
           res.statusCode = 200;
           res.setHeader('Content-Type', MIME[extname(target).toLowerCase()] ?? 'application/octet-stream');

@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
       CSP locked to self + Google Fonts + the WSS chat origins + the live BTC feed
-      + the radio stream hosts + the YouTube iframe origin (TV / Video / MONITOR
-      tabs). connect-src lists the MQTT brokers (EMQX primary, mosquitto fallback)
-      and the Coinbase WS feed; media-src lists the audio stream hosts; frame-src
-      allows the YouTube embeds only.
+      + the radio stream hosts + the YouTube iframe origin (TV / MONITOR tabs).
+      connect-src lists the MQTT brokers (EMQX primary, mosquitto fallback) and the
+      Coinbase WS feed; media-src lists the audio stream hosts; frame-src allows the
+      YouTube embeds only; worker-src allows the blob worker the vendored mqtt build
+      spawns under dev:web (the packaged app never loads that script).
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; media-src 'self' https://*.somafm.com https://stream.nightride.fm https://stream.laut.fm https://streams.80s80s.de; connect-src 'self' wss://broker.emqx.io:8084 wss://test.mosquitto.org:8081 wss://ws-feed.exchange.coinbase.com https://*.somafm.com https://stream.nightride.fm https://stream.laut.fm https://streams.80s80s.de; frame-src https://www.youtube.com https://www.youtube-nocookie.com"
+      content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; media-src 'self' https://*.somafm.com https://stream.nightride.fm; connect-src 'self' wss://broker.emqx.io:8084 wss://test.mosquitto.org:8081 wss://ws-feed.exchange.coinbase.com https://*.somafm.com https://stream.nightride.fm; frame-src https://www.youtube.com https://www.youtube-nocookie.com"
     />
     <title>NEXUS-7</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
@@ -47,12 +48,11 @@
     <div id="overlay-root" class="overlay-root"></div>
 
     <!--
-      mqtt.js as the prebuilt, self-contained UMD browser bundle (defines window.mqtt),
-      loaded as a plain 'self' script BEFORE the module. The npm 'mqtt' import does not
-      survive Vite's production rollup bundling (the chat connects in dev:web but the
-      packaged build silently never sends CONNECT); this vendored browser build does.
+      The chat's in-renderer MQTT transport (vendor/mqtt.min.js, a self-contained UMD
+      build) is loaded on demand by panels/chat/mqtt-client.ts ONLY when there is no
+      main-process relay bridge (dev:web). The packaged app rides the relay and never
+      loads it. CSP script-src 'self' covers the on-demand script.
     -->
-    <script src="./vendor/mqtt.min.js"></script>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

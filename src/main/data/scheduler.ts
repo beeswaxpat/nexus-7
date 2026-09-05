@@ -258,18 +258,29 @@ async function jobCandlesReconcile(win: BrowserWindow): Promise<void> {
   }
 }
 
-/** Run `fn` immediately, then re-arm a jittered timer that reschedules itself. */
-function every(intervalMs: number, fn: () => void | Promise<void>): void {
+/**
+ * Run `fn` (after an optional first delay), then re-arm a jittered timer that
+ * reschedules itself. The first run is immediate by default so the snapshot fills
+ * fast; jobs sharing an upstream pass a small `firstDelayMs` so they do not land on
+ * the same second at boot.
+ */
+function every(intervalMs: number, fn: () => void | Promise<void>, firstDelayMs = 0): void {
   const run = (): void => {
     void fn();
     const handle = setTimeout(run, jitter(intervalMs));
     timers.push(handle);
   };
-  // first run immediately so the snapshot fills fast, then schedule
+  if (firstDelayMs > 0) {
+    timers.push(setTimeout(run, firstDelayMs));
+    return;
+  }
   void fn();
   const handle = setTimeout(run, jitter(intervalMs));
   timers.push(handle);
 }
+
+/** Boot stagger for the ticker: it shares CoinGecko with the crypto job. */
+const TICKER_BOOT_DELAY_MS = 4_000;
 
 /**
  * Start every polling job and open the live candle ticker. Safe to call once
@@ -281,7 +292,9 @@ export function startScheduler(win: BrowserWindow): void {
   every(POLL.stocks, () => jobStocks(win));
   every(POLL.fng, () => jobFng(win));
   every(POLL.news, () => jobNews(win));
-  every(POLL.ticker, () => jobTicker(win));
+  // staggered: two CoinGecko calls in the same second trip the free-tier limiter
+  // and a single 429 would blank BOTH the boxes and the marquee at boot
+  every(POLL.ticker, () => jobTicker(win), TICKER_BOOT_DELAY_MS);
   every(POLL.candlesReconcile, () => jobCandlesReconcile(win));
   every(POLL.sats, () => jobSats(win));
 

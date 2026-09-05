@@ -135,13 +135,12 @@ export interface BoxTitles {
 }
 
 /**
- * Meme-image settings for the Pepe overlay. `useDefaults` toggles the bundled
- * thumbnail pool on/off; `custom` holds the user's own images as already
+ * Image settings for the overlay. `custom` holds the user's own images as already
  * downscaled JPEG data: URLs (longest side <= 240px), ready to drop into an
- * <img src>. Both pools are merged live by the overlay.
+ * <img src>. The app ships with no bundled images; old profiles may still carry a
+ * `useDefaults` field, which is ignored.
  */
 export interface ImageSettings {
-  useDefaults: boolean;
   custom: string[];
 }
 
@@ -154,10 +153,9 @@ export interface SceneSettings {
   swapped: boolean;
   showWormhole: boolean;
   showNightCity: boolean;
-  /** Wormhole ULTRA mode: gravity-lensed, chromatic, time-dilated rendering. */
-  ultra: boolean;
   /** Night City ULTRA mode: synthwave inversion (retro sun, neon grid street). */
   ultraCity: boolean;
+  // Old profiles may still carry `ultra` (the removed globe ULTRA mode); ignored.
 }
 
 /** Persisted user settings (app.getPath('userData')/settings.json). */
@@ -167,10 +165,8 @@ export interface Settings {
   /** Keys for the second (owner) box. Fully user-editable, same shape as friendAssets. */
   ownerAssets: string[];
   username: string;
-  btcTargetPrice: number;
+  /** Source for the TV tab (a YouTube channel id, watch url, or embed url). */
   liveTvUrl: string;
-  /** Source for the Video tab (crypto live streams). Same forms as liveTvUrl. */
-  videoTvUrl: string;
   /** Source for the MONITOR tab (public city/surveillance cams). Same forms as liveTvUrl. */
   monitorUrl: string;
   activeRightTab: 'news' | 'econ' | 'live' | 'jukebox' | 'monitor';
@@ -209,7 +205,7 @@ export interface Settings {
   /**
    * Meme-image overlay settings: whether the bundled defaults show, plus the
    * user's own uploaded images (downscaled JPEG data: URLs). Absent on old
-   * profiles, which fall back to { useDefaults: true, custom: [] }.
+   * profiles, which fall back to { custom: [] }.
    */
   images?: ImageSettings;
 }

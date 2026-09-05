@@ -60,7 +60,6 @@ function openProfile(ctx: AppContext | null | undefined): void {
 function readImages(ctx: AppContext | null | undefined): ImageSettings {
   const cur = ctx?.settings?.images;
   return {
-    useDefaults: cur?.useDefaults !== false,
     custom: Array.isArray(cur?.custom) ? [...cur!.custom] : []
   };
 }

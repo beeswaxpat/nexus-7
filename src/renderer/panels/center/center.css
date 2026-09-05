@@ -239,42 +239,6 @@
   color: var(--text-faint);
   margin-right: 4px;
 }
-/* road bar toward the target price */
-.bstat__road {
-  position: relative;
-  height: 10px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--border) 70%, transparent);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.bstat__road-fill {
-  position: absolute;
-  inset: 0;
-  transform-origin: left center;
-  transform: scaleX(0);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 55%, transparent),
-    var(--accent)
-  );
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
-  transition: transform 0.6s ease;
-}
-.bstat__road-labels {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-}
-.bstat__road-target {
-  color: var(--neon-gold);
-  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-gold) 45%, transparent);
-}
-
 /* BTC 24h change + animated reaction emoji on the price row (same data as rows) */
 .bstat__row {
   align-items: center;

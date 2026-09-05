@@ -1,4 +1,4 @@
-// FROZEN CONTRACT: shared constants. Values lifted from PORTING_SPEC.md.
+// FROZEN CONTRACT: shared constants read by main, preload, and renderer.
 
 import type { Settings } from './types';
 
@@ -37,9 +37,6 @@ export const CENTER_COIN_ID = 'bitcoin';
 /** Default center-asset key. The user can swap the featured asset in the UI. */
 export const DEFAULT_CENTER_KEY = `coingecko:${CENTER_COIN_ID}`;
 
-/** Default BTC road-bar target price (user-configurable in settings). */
-export const DEFAULT_BTC_TARGET = 444_000;
-
 /**
  * IPO placeholder shown under Bitcoin in the center column. SpaceX (SPCX) IPO date
  * was 2026-06-12; before that the slot showed a pre-IPO countdown, after it it shows
@@ -65,15 +62,6 @@ export const SECONDARY_DEFAULT_KEY = 'yahoo:' + SPCX_IPO.symbol;
  * Settings.liveTvUrl; the panel forces autoplay + mute and enables the JS API.
  */
 export const DEFAULT_LIVE_TV_URL = 'https://www.youtube.com/embed/KQp-e_XQnDE';
-
-/**
- * Default Video-tab source: the "Bitcoin LIVE" 24/7 chart + liquidation-watch
- * channel (youtube.com/@BitcoinLIVEyt, canonical id UCObE3J0qQ0DzcouV1w4DlGg).
- * Stored as a bare channel id so the player resolves to whatever that channel is
- * CURRENTLY streaming (live_stream?channel=...), surviving stream restarts; a
- * fixed video id would die whenever they cycle the broadcast.
- */
-export const DEFAULT_VIDEO_TV_URL = 'UCObE3J0qQ0DzcouV1w4DlGg';
 
 /**
  * Default MONITOR-tab feed: EarthCam's 24/7 Times Square cam (New York). The
@@ -109,8 +97,8 @@ export const TICKER_MAX = 50;
 export const NEWS_MAX = 50;
 
 /**
- * Reaction thresholds on 24h % change (see PORTING_SPEC.md). Centralized so the
- * pure helpers in core/reactions.ts and the overlays share one source of truth.
+ * Reaction thresholds on 24h % change. Centralized so the pure helpers in
+ * core/reactions.ts and the overlays share one source of truth.
  */
 export const REACTION = {
   // per-asset emoji
@@ -138,9 +126,7 @@ export const REACTION = {
     n10: -10,
     n15: -15,
     n20: -20
-  },
-  // orbiting avatar trigger: abs(24h change) of any asset in a person's box
-  avatarOrbit: 10
+  }
 } as const;
 
 /** RSS feeds for the news adapter, tagged by tab (crypto | econ). */
@@ -216,9 +202,7 @@ export function defaultSettings(): Settings {
     friendAssets: [...DEFAULT_FRIEND_KEYS],
     ownerAssets: [...DEFAULT_OWNER_KEYS],
     username: '',
-    btcTargetPrice: DEFAULT_BTC_TARGET,
     liveTvUrl: DEFAULT_LIVE_TV_URL,
-    videoTvUrl: DEFAULT_VIDEO_TV_URL,
     monitorUrl: DEFAULT_MONITOR_URL,
     activeRightTab: 'news',
     chaos: {
@@ -246,13 +230,12 @@ export function defaultSettings(): Settings {
       swapped: true,
       showWormhole: true,
       showNightCity: true,
-      ultra: false,
       ultraCity: false
     },
     // matches layout.css: the two asset boxes at 1, the chart a touch taller at 1.25.
     leftFlex: { friend: 1, owner: 1, chart: 1.25 },
     privateMode: false,
     bugNutLabel: 'TOTAL',
-    images: { useDefaults: true, custom: [] }
+    images: { custom: [] }
   };
 }

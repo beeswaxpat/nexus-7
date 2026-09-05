@@ -66,6 +66,9 @@ const QUIET_LOGGER = {
 const CRUMB_RETRIES = 1;
 const CRUMB_RETRY_DELAY_MS = 1_500;
 
+/** Symbols fetched in parallel per batch (each symbol is up to three requests). */
+const STOCK_CONCURRENCY = 3;
+
 function isTransient(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return /429|too many requests|crumb|ETIMEDOUT|ENOTFOUND|ECONNRESET|fetch failed/i.test(msg);
@@ -387,19 +390,25 @@ async function fetchOne(symbol: string): Promise<AssetQuote | null> {
  */
 export async function fetchQuotes(symbols: string[]): Promise<AssetQuote[]> {
   if (symbols.length === 0) return [];
-  const out: AssetQuote[] = [];
-
-  for (const symbol of symbols) {
-    try {
-      const q = await fetchOne(symbol);
-      if (q) out.push(q);
-    } catch {
-      // Defensive: fetchOne already tolerates the known failure modes, but no
-      // unexpected throw for one symbol may take down the rest of the batch.
+  // Each symbol costs up to three round trips (chart, crumb quote, after-hours),
+  // and a slow or 429ing Yahoo makes a strictly serial batch take a long time to
+  // first paint. A small worker pool keeps the STONKS box filling fast without
+  // hammering the endpoint. Results keep the input order.
+  const results: Array<AssetQuote | null> = new Array(symbols.length).fill(null);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < symbols.length) {
+      const i = next++;
+      try {
+        results[i] = await fetchOne(symbols[i]);
+      } catch {
+        // Defensive: fetchOne already tolerates the known failure modes, but no
+        // unexpected throw for one symbol may take down the rest of the batch.
+      }
     }
-  }
-
-  return out;
+  };
+  await Promise.all(Array.from({ length: Math.min(STOCK_CONCURRENCY, symbols.length) }, worker));
+  return results.filter((q): q is AssetQuote => q !== null);
 }
 
 /**

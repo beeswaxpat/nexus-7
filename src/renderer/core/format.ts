@@ -1,4 +1,4 @@
-// IMPLEMENTED (pure formatters per PORTING_SPEC.md "Number formatting"). Central so
+// Pure number formatters. Central so
 // every panel renders digits identically and they never jitter geometry.
 
 /**
@@ -57,6 +57,19 @@ export function formatAge(epochMs: number | null | undefined, now: number = Date
   if (hours < 24) return hours + 'h ago';
   const days = Math.floor(hours / 24);
   return days + 'd ago';
+}
+
+/**
+ * Wall-clock time of an epoch-ms stamp as HH:MM (24h, local zone). Used where a
+ * row is rendered once and never refreshed (chat), so a relative age would go
+ * stale. Invalid input -> empty string.
+ */
+export function formatClock(epochMs: number | null | undefined): string {
+  if (epochMs == null || !Number.isFinite(epochMs)) return '';
+  const d = new Date(epochMs);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 /**

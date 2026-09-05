@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 2, Track C2). Wraps mqtt.js over WSS. Broker list lives in
+// Chat transport. Wraps mqtt.js over WSS. Broker list lives in
 // shared/constants.ts (MQTT_BROKERS: primary EMQX, fallback test.mosquitto.org).
 // Connects to a derived topic, publishes/subscribes encrypted payloads, surfaces
 // connection status, and reconnects with exponential backoff (retries the same
@@ -9,12 +9,13 @@
 // On the wire they are base64 text so any broker / QoS-0 transport carries them
 // cleanly; we decode incoming payloads back to Uint8Array before onMessage.
 
-// mqtt comes from the VENDORED UMD browser build (window.mqtt), loaded by a plain
-// script tag in index.html before this module. The npm `import mqtt from 'mqtt'`
-// does NOT survive Vite's production rollup bundling: the chat connects in dev:web
-// but the packaged build silently never sends CONNECT and sits on "connecting"
-// forever. The prebuilt browser bundle (mqtt/dist/mqtt.min.js) is self-contained
-// and works in both dev and the exe. Only the TYPES are imported from the package.
+// The in-renderer transport uses the VENDORED UMD browser build of mqtt.js
+// (public/vendor/mqtt.min.js, defines window.mqtt), injected on demand by
+// ensureMqttScript() the first time this path runs. The npm `import mqtt from
+// 'mqtt'` does NOT survive Vite's production rollup bundling (the chat connects
+// in dev:web but a packaged build silently never sends CONNECT), and the packaged
+// app rides the main-process relay anyway, so the 370 KB script is only ever
+// fetched where it is actually used. Only the TYPES are imported from the package.
 import type { MqttClient as MqttJsClient, IClientOptions } from 'mqtt';
 
 /** The slice of the mqtt API we use, read off the global UMD build. */
@@ -26,6 +27,28 @@ interface MqttApi {
 function getMqtt(): MqttApi | null {
   const m = (globalThis as { mqtt?: MqttApi }).mqtt;
   return m && typeof m.connect === 'function' ? m : null;
+}
+
+const MQTT_SCRIPT_SRC = './vendor/mqtt.min.js';
+let mqttScriptPromise: Promise<void> | null = null;
+
+/** Inject the vendored mqtt build once; resolves when window.mqtt is available. */
+function ensureMqttScript(): Promise<void> {
+  if (getMqtt()) return Promise.resolve();
+  if (mqttScriptPromise) return mqttScriptPromise;
+  mqttScriptPromise = new Promise<void>((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = MQTT_SCRIPT_SRC;
+    s.async = true;
+    s.onload = () => (getMqtt() ? resolve() : reject(new Error('mqtt script loaded but window.mqtt missing')));
+    s.onerror = () => reject(new Error('mqtt script failed to load'));
+    document.head.appendChild(s);
+  });
+  // a failed load must be retryable on the next connect attempt
+  mqttScriptPromise.catch(() => {
+    mqttScriptPromise = null;
+  });
+  return mqttScriptPromise;
 }
 import { MQTT_BROKERS } from '../../../shared/constants';
 import { getBridge, type Bridge } from '../../bridge';
@@ -199,11 +222,19 @@ function createBrowserClient(opts: MqttClientOptions): MqttClient {
 
     const mqtt = getMqtt();
     if (!mqtt) {
-      // The vendored UMD script has not defined window.mqtt yet (or failed to load).
-      console.warn('[mqtt] global mqtt build unavailable, will retry');
-      consecutiveFails += 1;
-      reportTrouble();
-      scheduleReconnect();
+      // First use: pull the vendored UMD build in, then connect for real. A load
+      // failure counts as a failed attempt and rides the normal retry schedule.
+      ensureMqttScript().then(
+        () => {
+          if (!disposed) connect();
+        },
+        (err) => {
+          console.warn('[mqtt] vendored mqtt build unavailable, will retry', err);
+          consecutiveFails += 1;
+          reportTrouble();
+          scheduleReconnect();
+        }
+      );
       return;
     }
 

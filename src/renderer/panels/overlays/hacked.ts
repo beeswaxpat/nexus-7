@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 2, Track C1). Center overlay text for dump ("HACKED") and big
+// Center overlay text for dump ("HACKED") and big
 // pump ("LFG"). Text-only on the contained, pointer-events:none overlay layer, so it
 // never reflows the grid. The two text nodes always exist (built once, lazily); the
 // active one is revealed purely by the data-center-overlay attribute the CSS keys on.

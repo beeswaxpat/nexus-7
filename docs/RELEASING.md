@@ -32,6 +32,8 @@ You have two valid options:
 
 Reminder: keep personal builds local. If you build for yourself with a personal seed in place, do not upload that exe to a public release.
 
+Guard: `npm run build:exe` first runs `scripts/check-seed.mjs`, which refuses to package while `resources/seed-settings.json` exists and differs from the neutral example. For a deliberate personal build set `NEXUS_ALLOW_SEED=1` for that one command. `resources/seed-settings.buddy.json` and `resources/asset-registry.json` are excluded from the asar by `electron-builder.yml`.
+
 ## Cutting a GitHub release
 
 The release workflow (`.github/workflows/release.yml`) builds the portable exe on a version tag and attaches it to the GitHub release.

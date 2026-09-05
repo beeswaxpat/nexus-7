@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 2, Track C2). E2E crypto for chat. A shared passphrase derives
+// E2E crypto for chat. A shared passphrase derives
 // BOTH the AES-GCM key (PBKDF2 via WebCrypto) and a hard-to-guess topic, so a wrong
 // passphrase yields a different topic AND key. Messages: {user,text,ts}, encrypted
 // with a 12-byte random IV prepended. crypto.subtle is available in the renderer

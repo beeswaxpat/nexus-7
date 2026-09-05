@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 2, Track C1). Blinking BTC easter-egg banner on the contained
+// Blinking BTC easter-egg banner on the contained
 // overlay layer. Given a BTC 24h change, overlay-root computes the verbatim text via
 // core/reactions.bannerFor and calls showBanner/clearBanner here. The strip blinks
 // (CSS, opacity-only) and lives on the fixed pointer-events:none overlay, so it can

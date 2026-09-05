@@ -1,4 +1,4 @@
-// IMPLEMENTED (Phase 1, Track B). Builds one asset row element: name, reactive
+// Builds one asset row element: name, reactive
 // emoji, price, 24h %, 7d %, market cap, and a small stale dot. Pure presentation
 // of one AssetQuote. Updates happen IN PLACE (updateAssetRow) so geometry never
 // changes: only textContent/class swap and the emoji animates via transform.
@@ -147,9 +147,13 @@ function startQtyEdit(refs: RowRefs): void {
       const parsed = raw === '' ? 0 : Number(raw);
       const qty = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
       if (qty !== prior) {
-        void updateSettings({ holdings: { [refs.quote.key]: qty } });
-        // let the owning box recompute its header total
-        refs.root.dispatchEvent(new CustomEvent('nexus:holdings-changed', { bubbles: true }));
+        // Persist FIRST, then tell the box (and the BTC strip, which listens on
+        // window) to recompute: by the time the event fires the settings cache is
+        // fresh, so one render is enough and nothing needs a guessed retry timer.
+        const notify = (): void => {
+          refs.root.dispatchEvent(new CustomEvent('nexus:holdings-changed', { bubbles: true }));
+        };
+        updateSettings({ holdings: { [refs.quote.key]: qty } }).then(notify, notify);
       }
     }
     renderCap(refs);

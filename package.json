@@ -27,7 +27,8 @@
     "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"vite\" \"wait-on tcp:5173 && tsc -p tsconfig.main.json && electron .\"",
     "build": "tsc -p tsconfig.main.json && vite build",
     "icon": "node scripts/make-icon.mjs",
-    "build:exe": "npm run build && npm run icon && electron-builder --win portable",
+    "check-seed": "node scripts/check-seed.mjs",
+    "build:exe": "npm run check-seed && npm run build && npm run icon && electron-builder --win portable",
     "selftest": "node scripts/selftest-all.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
