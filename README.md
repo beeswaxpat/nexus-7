@@ -9,6 +9,8 @@
 
 NEXUS-7 is a desktop app for people who keep a market screen open. It shows live crypto and stock prices, a Bitcoin chart, a wireframe globe that tracks real satellites and scrolls out to the edge of the universe, an encrypted group chat, free internet radio, public webcams and TV, and an animated synthwave skyline. It uses public APIs only. No accounts, no API keys, no telemetry.
 
+![NEXUS-7 dashboard](./docs/screenshot.png)
+
 Built with Electron, Vite, and TypeScript. Ships as a single portable Windows executable (no installer).
 
 ## Features
@@ -55,10 +57,6 @@ Built with Electron, Vite, and TypeScript. Ships as a single portable Windows ex
 - Five LEDs in the titlebar show the health of each data source (hover for the last update); a red LED means the panels are showing last-known values.
 - "Chaos" effects: price-driven banners, accent recolor on pumps and dumps, and your uploaded images drifting in as overlays. None of it moves the layout.
 - Respects `prefers-reduced-motion`.
-
-## Screenshots
-
-![NEXUS-7 dashboard](./docs/screenshot.png)
 
 ## Quick Start
 

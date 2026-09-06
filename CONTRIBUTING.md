@@ -4,7 +4,7 @@ Thanks for your interest in NEXUS-7. This is a small project, so the process is 
 
 ## Dev setup
 
-Requires Node 20 and npm.
+Requires Node 22 and npm.
 
 ```
 npm install
